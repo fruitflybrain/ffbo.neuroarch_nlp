@@ -6,8 +6,9 @@ NeuroArch JSON generation--from a "semantic abstract syntax tree" (as a quepy Ex
 
 from copy import deepcopy
 import logging
+logging.basicConfig()
 log = logging.getLogger( 'neuroarch_nlp.codegen' )
-
+log.setLevel('DEBUG')
 from quepy_analysis.dsl import HasEqualTo, HasVerb, HasColor, HasFormat
 
 class EfficiencyException( BaseException ):
@@ -19,13 +20,6 @@ def generate_json( sast ):
     """ Given a "semantic abstract syntax tree" (SAST) (e.g. quepy expression),
         return a dictionary with structure according to the expected NeuroArch JSON format.
     """
-    ''' Logging the SAST:
-    for node in sast.iter_nodes():
-        log.info( node )
-        for rel, dest in sast.iter_edges(node):
-            log.info( "\t"+ rel +"\t"+ str(dest) )'''
-
-
     # `node_edge_val` stores, for each node, the other nodes to which it's related.
     node_edge_val = {}
     for node in sast.iter_nodes():
@@ -200,7 +194,13 @@ def generate_json( sast ):
                     node_edge_val[nid].pop( 'has', None )
                 # TODO: We might want a more permanent solution (for regions as "modifiers")
                 elif node_edge_val[has_nid].get('type',None) == 'region':
-                    node_edge_val[nid]['region'] = node_edge_val[has_nid]['name']
+                    node_edge_val[nid]['region'] = {}
+                    if 'name' in node_edge_val[has_nid]:
+                        node_edge_val[nid]['region']['name'] = node_edge_val[has_nid]['name']
+                    if 'class' in node_edge_val[has_nid]:
+                        node_edge_val[nid]['region']['class'] = node_edge_val[has_nid]['class']
+                    if 'instance' in node_edge_val[has_nid]:
+                        node_edge_val[nid]['region']['instance'] = node_edge_val[has_nid]['instance']
                     nodes_to_delete.append( has_nid )
                     node_edge_val[nid].pop( 'has', None )
                 elif node_edge_val[has_nid].get('type',None) == 'ownerInstance':
@@ -215,12 +215,14 @@ def generate_json( sast ):
         pushdown_neuron( sast.head )
         merge_neuronhasnode()
 
+    '''
     # Check the updates from optimization
     for node in node_edge_val:
         log.info( node )
         for rel in node_edge_val[ node ]:
             log.info( "\t"+ rel +"\t"+ str(node_edge_val[node][rel]) )
     log.info( "sast.head = "+ str(sast.head) )
+    '''
 
     def set_owners( subq_conn ):
         if 'type' in node_edge_val[ subq_conn ] \
@@ -280,16 +282,41 @@ def generate_json( sast ):
                     outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
                         {'method': {'traverse_owns': {'cls': node['class']} } } }
                     retlist.append( outdict )
+                elif 'instance' in node:
+                    outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
+                        {'method': {'traverse_owns': {'instanceof': node['instance']} } } }
+                    retlist.append( outdict )
                 else:
-                    log.warning( "Region has no '(node_)class'!" )
+                    log.warning( "Region has no '(node_)class or instance'!" )
                 if 'name' in node: # TODO: This is identical to below. Remove redundancy.
                     outdict = { 'object': {'memory': 0}, 'action': \
-                        {'method': {'has': {'name': node['name']}} } }
+                                    {'method': {'has': {'name': node['name']}} } }
                     retlist.append( outdict )
             elif ntype == 'neuron':
+                if 'region' in node:
+                    if isinstance(node['region'],dict):
+                        if 'class' in node['region']:
+                            retlist.append({ 'object': {'memory': 0},
+                                             'action': {'method': {'traverse_owns': {'cls': node['region']['class']}} } } )
+                        if 'instance' in node['region']:
+                            retlist.append({ 'object': {'memory': 0},
+                                             'action': {'method': {'traverse_owns': {'instanceof': node['region']['instance']}} } } )
+                        if 'name' in node['region']:
+                            retlist.append({ 'object': {'memory': 0},
+                                             'action': {'method': {'has': {'name': node['region']['name']}} } } )
+                    else:
+                        retlist.append( { 'object': {'class': 'Neuropil'},
+                                          'action': {'method': {'query': {'name': node['region']}}} } )
+                        retlist.append( { 'object': {'memory': 0},
+                                          'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                        retlist.append( { 'object': {'memory': 0},
+                                          'action': {'op': {'__and__': {'memory': 2}}} } )
                 if 'class' in node:
-                    outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
+                    #outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
+                    #    {'method': {'traverse_owns': {'cls': node['class']} } } }
+                    outdict = { 'object': {'memory': 0}, 'action': \
                         {'method': {'traverse_owns': {'cls': node['class']} } } }
+                    
                     retlist.append( outdict )
                 else:
                     log.warning( "Neuron has no '(node_)class'!" )
@@ -306,13 +333,6 @@ def generate_json( sast ):
                 if 'locality' in node:
                     retlist.append( {'object': {'memory': 0}, 'action':
                         {'method': {'has': {'locality': node['locality']}} } } )
-                if 'region' in node:
-                    retlist.append( { 'object': {'class': 'Neuropil'},
-                        'action': {'method': {'query': {'name': node['region']}}} } )
-                    retlist.append( { 'object': {'memory': 0},
-                        'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
-                    retlist.append( { 'object': {'memory': 0},
-                        'action': {'op': {'__and__': {'memory': 2}}} } )
                 if 'ownerInstance' in node:
                     retlist.append( { 'object': {'class': 'Neuropil'},
                         'action': {'method': {'query': {}}} } )
@@ -353,8 +373,23 @@ def generate_json( sast ):
             elif ntype == 'synapticConnection':
                 pass
             elif ntype == 'region':
-                retlist.append( { 'object': {'class': node['class']},
-                    'action': {'method': {'query': {'name': node['name']}}} } )
+                if 'class' in node:
+                    if 'name' in node:
+                        retlist.append( { 'object': {'class': node['class']},
+                                          'action': {'method': {'query': {'name': node['name']}}} } )
+                    else:
+                        retlist.append( { 'object': {'class': node['class']},
+                                          'action': {'method': {'query': {}}} } )
+                elif 'instance' in node:
+                    retlist.append( { 'object': {'class': 'Neuropil'},
+                                      'action': {'method': {'query': {}}} } )
+                    retlist.append( {'object': {'memory': 0},
+                                     'action': {'method': {'traverse_owns': {'instanceof': node['instance']}} } } )
+                    if 'name' in node:
+                        retlist.append( {'object': {'memory': 0},
+                                         'action': {'method': {'has': {'name': node['name']}} } } )
+                else:
+                    return retlist
                 # NOTE: We assume we're looking for Neurons
                 retlist.append( { 'object': {'memory': 0},
                     'action': {'method': {'traverse_owns': {'cls': 'Neuron'}} } } )
@@ -375,14 +410,20 @@ def generate_json( sast ):
                 log.warning( "Unsupported type for 'has' relation!: %s" % ntype )
         elif op is None:
             if ntype == 'region':
-                if 'class' not in node:
-                    log.warning( "'class' not in region node!" )
                 if 'name' not in node:
                     log.warning( "'name' not in region node!" )
-                params = { 'name': node['name'] }
-                outdict = { 'object': {'class': node['class']}, \
-                    'action': {'method': {'query': params}} }
-                retlist.append( outdict )
+                if 'class' not in node:
+                    if 'instance' in node:
+                        retlist.append( { 'object': {'class': 'Neuropil'},
+                                'action': {'method': {'query': {}}} } )
+                        retlist.append( { 'object': {'memory': 0},
+                                'action': {'method': {'traverse_owns': {'instanceof': node['instance']}}} } )
+                else:
+                    retlist.append( { 'object': {'class': node['class']},
+                                'action': {'method': {'query': {}}} } )
+                if 'name' in node:
+                    retlist.append( { 'object': {'memory': 0},
+                            'action': {'method': {'has': {'name': node['name']}}} } )
             elif ntype == 'neuron':
                 if 'class' not in node:
                     log.warning( "'class' not in neuron node!" )
@@ -428,20 +469,84 @@ def generate_json( sast ):
                 # NOTE: We assume there's at most 1 subquery that the (other) node is pre/postsynaptic to.
                 if 'presynapticTo' in node:
                     retlist += get_node_najson( 0, None, get_owner( node['presynapticTo'] ) )
-                    retlist.append(
-                        {"action": {"method": {"pre_synaptic_neurons": {}}}, "object": {"memory": 0}})
+                    if 'hasMoreThan' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                    elif 'hasLessThan' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                    elif 'hasAtLeast' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                    elif 'hasAtMost' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                    elif 'hasEqualTo' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                    else:
+                        retlist.append(
+                            {"action": {"method": {"pre_synaptic_neurons": {}}}, "object": {"memory": 0}})
                     retlist += add_attributes()
                 elif 'presynapticToState' in node:
-                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
-                        "action": {"method": {"pre_synaptic_neurons": {}}} } )
+                    if 'hasMoreThan' in node:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                    elif 'hasLessThan' in node:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                    elif 'hasAtLeast' in node:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                    elif 'hasAtMost' in node:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                    elif 'hasEqualTo' in node:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                    else:
+                        retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                                         "action": {"method": {"pre_synaptic_neurons": {}}} } )
                     retlist += add_attributes()
                 elif 'postsynapticTo' in node:
                     retlist += get_node_najson( 0, None, get_owner( node['postsynapticTo'] ) )
-                    retlist.append(
-                        {"action": {"method": {"post_synaptic_neurons": {}}}, "object": {"memory": 0}})
+                    if 'hasMoreThan' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                    elif 'hasLessThan' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                    elif 'hasAtLeast' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                    elif 'hasAtMost' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                    elif 'hasEqualTo' in node:
+                        retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                    else:
+                        retlist.append(
+                            {"action": {"method": {"post_synaptic_neurons": {}}}, "object": {"memory": 0}})
                     retlist += add_attributes()
                 elif 'postsynapticToState' in node:
-                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                    if 'hasMoreThan' in node:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                    elif 'hasLessThan' in node:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                    elif 'hasAtLeast' in node:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                    elif 'hasAtMost' in node:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                    elif 'hasEqualTo' in node:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                    else:
+                        retlist.append( {'object': {'state': int(node['postsynapticToState'])},
                         "action": {"method": {"post_synaptic_neurons": {}}} } )
                     retlist += add_attributes()
                 # NOTE: Right now we assume no more than 1 of these relations would be in a neuron
@@ -501,10 +606,25 @@ def generate_json( sast ):
                             'action': {'method': {'query': {}}} } )
                     # TODO: There's considerable redundancy. Clean this up.
                     elif 'region' in params:
-                        retlist.append( { 'object': {'class': 'Neuropil'},
-                            'action': {'method': {'query': {'name': params['region']}}} } )
+                        if isinstance(params['region'],dict):
+                            if 'class' in params['region']:
+                                retlist.append( { 'object': {'class': 'Neuropil'},
+                                                  'action': {'method': {'query': {}}} } )
+                                retlist.append({ 'object': {'memory': 0},
+                                                 'action': {'method': {'traverse_owns': {'cls': params['region']['class']}} } } )
+                            if 'instance' in params['region']:
+                                retlist.append( { 'object': {'class': 'Neuropil'},
+                                                  'action': {'method': {'query': {}}} } )
+                                retlist.append({ 'object': {'memory': 0},
+                                                 'action': {'method': {'traverse_owns': {'instanceof': params['region']['instance']}} } } )
+                            if 'name' in params['region']:
+                                retlist.append({ 'object': {'memory': 0},
+                                                 'action': {'method': {'has': {'name': params['region']['name']}} } } )
+                        else:
+                            retlist.append( { 'object': {'class': 'Neuropil'},
+                                              'action': {'method': {'query': {'name': params['region']}}} } )
                         retlist.append( { 'object': {'memory': 0},
-                            'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                                          'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
                         params.pop( 'region' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'ownerInstance' in params:
@@ -555,27 +675,91 @@ def generate_json( sast ):
             # TODO: Clean up use of relations. And this whole segment in general.
             if 'presynapticTo' in node:
                 retlist += get_node_najson( 0, None, get_owner( node['presynapticTo'] ) )
-                retlist.append(
-                    {"action": {"method": {"pre_synaptic_neurons": {}}}, "object": {"memory": 0}})
+                if 'hasMoreThan' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                elif 'hasLessThan' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                elif 'hasAtLeast' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                elif 'hasAtMost' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                elif 'hasEqualTo' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                else:
+                    retlist.append(
+                        {"action": {"method": {"pre_synaptic_neurons": {}}}, "object": {"memory": 0}})
                 retlist.append(
                     {"action": {"op": {"__and__": {'memory': len(retlist) - lastlen}}}, "object": {"memory": 0}})
             elif 'presynapticToState' in node:
-                retlist.append( {'object': {'state': int(node['presynapticToState'])},
-                    "action": {"method": {"pre_synaptic_neurons": {}}} } )
+                if 'hasMoreThan' in node:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                elif 'hasLessThan' in node:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                elif 'hasAtLeast' in node:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                elif 'hasAtMost' in node:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                elif 'hasEqualTo' in node:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                        "action": {"method": {"pre_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                else:
+                    retlist.append( {'object': {'state': int(node['presynapticToState'])},
+                                         "action": {"method": {"pre_synaptic_neurons": {}}} } )
                 retlist.append(
                     {"action": {"op": {"__and__": {'memory': len(retlist) - lastlen}}}, "object": {"memory": 0}})
             elif 'postsynapticTo' in node:
                 retlist += get_node_najson( 0, None, get_owner( node['postsynapticTo'] ) )
-                retlist.append(
-                    {"action": {"method": {"post_synaptic_neurons": {}}}, "object": {"memory": 0}})
+                if 'hasMoreThan' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                elif 'hasLessThan' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                elif 'hasAtLeast' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                elif 'hasAtMost' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                elif 'hasEqualTo' in node:
+                    retlist.append( {"object": {"memory": 0},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                else:
+                    retlist.append(
+                        {"action": {"method": {"post_synaptic_neurons": {}}}, "object": {"memory": 0}})
                 retlist.append(
                     {"action": {"op": {"__and__": {'memory': len(retlist) - lastlen}}}, "object": {"memory": 0}})
             elif 'postsynapticToState' in node:
-                retlist.append( {'object': {'state': int(node['postsynapticToState'])},
-                    "action": {"method": {"post_synaptic_neurons": {}}} } )
+                if 'hasMoreThan' in node:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasMoreThan'],'rel':'>'}}} } )
+                elif 'hasLessThan' in node:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasLessThan'],'rel':'<'}}} } )
+                elif 'hasAtLeast' in node:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtLeast'],'rel':'>='}}} } )
+                elif 'hasAtMost' in node:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasAtMost'],'rel':'<='}}} } )
+                elif 'hasEqualTo' in node:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {'N':node['hasEqualTo'],'rel':'='}}} } )
+                else:
+                    retlist.append( {'object': {'state': int(node['postsynapticToState'])},
+                        "action": {"method": {"post_synaptic_neurons": {}}} } )
                 retlist.append(
                     {"action": {"op": {"__and__": {'memory': len(retlist) - lastlen}}}, "object": {"memory": 0}})
-
+                
         # NOTE: "Subregions" currently cannot be grouped with and/or operators--at the parse stage
         if 'subregion' in node:
             retlist += get_node_najson( 0, 'subregion', node['subregion'] )
@@ -618,4 +802,5 @@ def generate_json( sast ):
         if HasColor.relation in node0:
             output[ 'color' ] = node0[ HasColor.relation ]
 
+    #log.info(output)
     return sast.get_head(), output

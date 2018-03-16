@@ -9,14 +9,19 @@ from .dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, Presynapti
     HasClass, HasName, IsNeuronModifier, IsNeuron, IsOrOp, IsAndOp, HasPart, \
     OwnedBy, HasSubregion, IsGeneticMarker, HasGeneticMarker, IsNumConnections, \
     HasMoreThan, HasLessThan, HasEqualTo, HasConnectionsTarget, HasType, HasRegion, \
-    FromRegion, ToRegion, IsConnection, Has, HasConnections, HasVerb, HasColor, HasFormat, IsCommand
-from .grammar import neuron_types, synapticities, localities, ownerinstances, transmitters, modifiers, \
-                     neuropils, regions, lowercase_is_in, adjnoun, notneurons, modifiers_and_regions, colors_values
+    FromRegion, ToRegion, IsConnection, Has, HasConnections, HasVerb, HasColor, HasFormat, \
+    IsCommand, IsNumSynapses, HasAtLeast, HasAtMost
+from .grammar import neuron_types, synapticities, localities, transmitters, modifiers, \
+                     neuropils, regions, lowercase_is_in, adjnoun, notneurons, modifiers_and_regions, colors_values, \
+                     subregions#,ownerinstances
+
+syn_num = None
 
 def get_name_expression( name, syn_to=None ):
-    """ Map a given string (`name`) to a particular "Semantic Abstract Syntax Tree" (SAST) element.
-        The SAST element is given as a quepy Expression.
+    """ Map a given string (`name`) to a particular "semantic abstract syntax tree" (SAST) element.
+        The SAST element is given as a Quepy Expression.
     """
+    #print name
     if name in transmitters:  # TODO: self.transmitters?
         # TODO: Consider using "IsNeurotransmitter" as a class (in the DSL).
         expr = IsAttribute() + HasKey('Transmitters') + HasValue( modifiers[name] )
@@ -24,6 +29,7 @@ def get_name_expression( name, syn_to=None ):
         expr = IsAttribute() + HasKey('name') + HasValue( modifiers[name] )
     elif name in synapticities:
         expr = IsSynapticConnection()
+        #print "syn_num", syn_num
         if name == 'presynaptic':
             if syn_to is None:
                 expr += PresynapticToState('0')
@@ -34,31 +40,45 @@ def get_name_expression( name, syn_to=None ):
                 expr += PostsynapticToState('0')
             else:
                 expr += PostsynapticTo(syn_to)
+        if syn_num: expr+=syn_num
     elif name in localities:
         expr = IsAttribute() + HasKey('locality') + HasValue( modifiers[name] )
-    elif name in ownerinstances:
+        '''elif name in ownerinstances:
         # TODO: This is a pretty hokey representation. Change it.
-        expr = IsOwnerInstance() + HasInstance( ownerinstances[name] )
+        expr = IsOwnerInstance() + HasInstance( ownerinstances[name] )'''
     elif name in neuropils:
         expr = IsBrainRegion() + HasClass('Neuropil') + HasName(neuropils[name])
-    elif name in ['single cartridge', 'home cartridge']:
+        '''#Specific Subregions
+        elif name in ['single cartridge', 'home cartridge']:
         expr = IsBrainRegion() + HasClass('Cartridge') + HasName('home')
-    elif name == 'channel':
-        expr = IsBrainRegion() + HasClass('Neuropil') + HasName('channel')
+        elif name == 'channel':
+        expr = IsBrainRegion() + HasClass('Neuropil') + HasName('channel')'''
+    #Subregions
+    elif name in subregions:
+        expr = IsBrainRegion()
+        if subregions[name][0]:
+            expr+=HasClass(subregions[name][0])
+        if subregions[name][1]:
+            expr+=HasInstance(subregions[name][1])
+        if subregions[name][2]:
+            expr+=HasName(subregions[name][2])
     else:
         # NOTE: This is basically a catch-all, and the generated expression
         #       is unlikely to be useful. Raise an exception, and/or log this?
         expr = IsNeuronModifier() + HasName(name)
     return expr
 
-# TODO: Handle 'not' generally (i.e. as an operator)
-# TODO: Handle 'not', 'and', and 'or' as operators (which can be used with parens)?
-#       e.g. show neurons not in lamina and medulla. show neurons not in (lamina or medulla)
-
 def get_region_owner(wordlist, region_indicator):
+    """ Given a list of tokens (as Quepy Words), return a SAST (sub-)tree
+        representing the containment relations (and any connectives)
+        between the regions in the list (as identified by region_indicator).
+    """
+    #print "get_region_owner wordlist", wordlist
+    #print "get_region_owner region_indicator", region_indicator
+    
     # NOTE: This treats ands/ors as binary operators.
     tokenlist = [x.token.lower() for x in wordlist]
-    if 'and' in tokenlist:  # TODO: Combine checking and index-getting in one func.
+    if 'and' in tokenlist:
         andidx = tokenlist.index('and')
         # NOTE: We currently treat 'and's as disjunctions
         return IsOrOp() \
@@ -73,10 +93,7 @@ def get_region_owner(wordlist, region_indicator):
         if tokenlist[0] == 'in':
             wordlist = wordlist[1:]
         previous_region = None
-        # TODO: Iterate over Question(Lemma("not")) + brainregion instead?
-        # TODO: finditer( Q(Lem(not)) + notneurons, wordlist ) can give us a failure,
-        #       at least for the input "show neurons in OG". Why?
-        for n in finditer(Question(Lemma("not")) + region_indicator, wordlist):
+        for n in finditer(Question(Lemma('not')) + region_indicator, wordlist):
             r, s = n.span()
             region_name = ' '.join([comp.token for comp in wordlist[r:s]]).lower()
             current_region = get_name_expression(region_name)
@@ -87,10 +104,14 @@ def get_region_owner(wordlist, region_indicator):
         return previous_region
 
 def build_mod_tree(wordlist, synaptic_to):
-    # The (sub-)subquery which this subquery is "(pre-/post-)synaptic to".
-    # Wouldn't a parser (generator) be nice for this?
+    """ Given a list of tokens (as Quepy Words), return a SAST (sub-)tree
+        representing the detected neuron attributes ("modifiers")
+        and any connectives.
+        synaptic_to represents the phrase which this sequence is "(pre-/post-)synaptic to".
+    """
+    #print "build_mod_tree wordlist", wordlist
+    #print "build_mod_tree synaptic_to", synaptic_to
     tokenlist = [x.token.lower() for x in wordlist]
-    # NOTE: We assume neuron modifiers are not longer than 1 word! TODO: Address.
     # We make multiple passes, but "hopefully" the modifier list is not that long.
     for idx, token in enumerate(tokenlist):
         if (token == 'and' or token == 'or') and len(tokenlist) > idx + 2:
@@ -114,13 +135,10 @@ def build_mod_tree(wordlist, synaptic_to):
                  + HasPart( build_mod_tree(wordlist[idx + 2:], synaptic_to) )
     # If we've made it this far, we can assume there's zero or one 'and'/'or's.
     mods = []
-    # TODO: Update the "_MoreGeneral" QuestionTemplate to use the below finditer (1st) param?
     for n in finditer(Predicate(lowercase_is_in(modifiers_and_regions)), wordlist):
         r, s = n.span()
-        # TODO: Don't use [0] for these? Maybe ' '.join(tokenlist[r:s]) ?
         mod_name = tokenlist[r:s][0]
         mods.append(mod_name)
-    # TODO: We can assume that len(mods) >= 1, right?
     if len(mods) == 1:
         return get_name_expression(mods[0], synaptic_to)
     # NOTE: (A reminder..:) We assume 'and'/'or' are not biologically relevant terms...
@@ -135,21 +153,56 @@ def build_mod_tree(wordlist, synaptic_to):
     return op
 
 def interpret_NeuronsQuery_MoreSpecific(self, match):
-    # TODO: If a subquery has a prepositional phrase attached (e.g. "in [regions]"),
+    # NOTE: If a subquery has a prepositional phrase attached (e.g. "in [regions]"),
     #       then we should see if the preceding subqueries lack a prepositional phrase.
     #       By default, attach the prep. phrase to the preceding subqueries as well.
-    #       But: TODO: We'll want to alert the user and have them check/disambiguate this.
+    #       But we'd prefer to alert the user and have them check this.
     # subquery_list is a list of tuples, where the first element is the Expression tree (SAST)
     # and the second element contains the sub-tree corresponding to any owned_by region(s)
+    #print "interpret_NeuronsQuery_MoreSpecific", match._words, match.words, match._particles
+    global syn_num
+    syn_num = None
     subquery_list = []
-    # TODO: Find out if this picks up any subqueries in any synaptic_phrases.
     for mtch in finditer(self.subquery, match.words):
         i, j = mtch.span()
-
+        #for x in mtch.state:
+        #    print x, mtch.state[x]
         def get_subquery(m, matchwords):
-            neuron = IsNeuron() + HasClass('Neuron')  # TODO: Remove redundancy?
+            neuron = IsNeuron() + HasClass('Neuron')
             owned_region = None
-
+            global syn_num 
+            #print matchwords
+            #print m.state
+            if 'synapse_num_clause' in m:
+                p, q = m['synapse_num_clause']
+                conn_quant_words = matchwords[p:q]
+                # TODO: Perform a search instead of finditer
+                for n in finditer(Pos("CD"), conn_quant_words):
+                    r, s = n.span()
+                    conn_num = ' '.join([c.token for c in conn_quant_words[r:s]])
+                    moreorless = False  # See above...
+                    for o in finditer(Lemmas("more than"), conn_quant_words):
+                        syn_num = HasMoreThan(conn_num)
+                        moreorless = True
+                    for o in finditer(Lemmas("less than"), conn_quant_words):
+                        syn_num =  HasLessThan(conn_num)
+                        moreorless = True
+                    for o in finditer(Lemma("atleast"), conn_quant_words):
+                        syn_num = HasAtLeast(conn_num)
+                        moreorless = True
+                    for o in finditer(Lemma("atmost"), conn_quant_words):
+                        syn_num =  HasAtMost(conn_num)
+                        moreorless = True
+                    for o in finditer(Lemmas("at least"), conn_quant_words):
+                        syn_num = HasAtLeast(conn_num)
+                        moreorless = True
+                    for o in finditer(Lemmas("at most"), conn_quant_words):
+                        syn_num = HasAtMost(conn_num)
+                        moreorless = True
+                    
+                    if not moreorless:
+                        syn_num = HasEqualTo(conn_num)
+                #print "syn_num", syn_num
             # The (sub-)subquery which this subquery is "(pre-/post-)synaptic to".
             synaptic_to = None
             if 'synaptic_phrase' in m:
@@ -172,13 +225,11 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                 for n in finditer(self.subquery, synaptic_phrase[to_idx + 1:]):
                     r, s = n.span()
                     synaptic_to, _ = get_subquery(n, synaptic_phrase[to_idx + 1:])
-
-                # TODO: Finish this. This is temporary.
                 if 'presynaptic' in syn_type:
                     neuron += PresynapticTo(synaptic_to)
                 elif 'postsynaptic' in syn_type:
                     neuron += PostsynapticTo(synaptic_to)
-
+                if syn_num: neuron += syn_num
                 # This is basically just a trick to update the existing ("parent") subquery.
                 # TODO: Clean this up.
                 for m in finditer(self.subquery, matchwords[:p]):
@@ -195,18 +246,12 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
             has_modifiers = []
             if 'neuron_modifiers' in m:
                 p, q = m['neuron_modifiers']
-                modifiers_words = matchwords[p:q]
-                # Get rid of commas. (For now, at least. TODO: It might help to disambiguate.)
-                modifiers_words = [x for x in modifiers_words if x.pos != ',']
+                modifiers_words = [x for x in matchwords[p:q] if x.pos != ',']
 
                 has_modifiers.append( build_mod_tree(modifiers_words, synaptic_to) )
-            # TODO: Check if there are "conflicts" between stated transmitters in
-            #       `transmitters` vs. `neuron_modifiers`?
             if 'transmitters' in m:
                 p, q = m['transmitters']
-                modifiers_words = matchwords[p:q]
-                # Get rid of commas. (For now, at least. TODO: It might help to disambiguate.)
-                modifiers_words = [x for x in modifiers_words if x.pos != ',']
+                modifiers_words = [x for x in matchwords[p:q] if x.pos != ',']
 
                 has_modifiers.append( build_mod_tree(modifiers_words, synaptic_to) )
             if 'neurons' in m:
@@ -227,18 +272,15 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                 neuron = neuron + HasGeneticMarker(marker)
                 # TODO: Include this as a 'has' relation (as above)?
             if 'conn_quant' in m:
+                # NOTE: This is currently unused by the code generator
                 p, q = m['conn_quant']
                 conn_quant_words = matchwords[p:q]
 
-                # TODO: Probably want to support "more than", "less than", and
-                #       "[empty string]"--for equality
                 quantdir = IsNumConnections()
-                # TODO: Don't use finditer; just do a search
+                # TODO: Perform a search instead of finditer
                 for n in finditer(Pos("CD"), conn_quant_words):
                     r, s = n.span()
-                    # TODO: Join with a space? Is the list ever longer than 1, anyway?
                     conn_num = ' '.join([c.token for c in conn_quant_words[r:s]])
-                    # TODO: Again, don't use finditer. And would be nice to have if/elif branches
                     moreorless = False  # See above...
                     for o in finditer(Lemmas("more than"), conn_quant_words):
                         quantdir = quantdir + HasMoreThan(conn_num)
@@ -256,7 +298,6 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                 neuron = neuron + HasConnections(quantdir)
             if 'connections_clause' in m:
                 p, q = m['connections_clause']
-                # Get rid of commas. (For now, at least. TODO: It might help to disambiguate.)
                 connections_words = [x for x in matchwords[p:q] if x.pos != ',']
                 connectives = []
                 segments = [[]]
@@ -280,7 +321,8 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                 connection_nodes = []
                 for segment in segments:
                     # NOTE: The order of these loops (which shouldn't be loops) currently matters.
-                    # NOTE: We assume no region has these terms in their name/synonyms! TODO: Check.
+                    # NOTE: We assume no region has these terms in their name/synonyms.
+                    # TODO: Clean this up.
                     for n in finditer(Lemma('connection') | Lemma('process')
                                               | Lemma('arborization') | Lemma('arborizations')
                                               | Lemma('arborize') | Lemma('innervate')
@@ -296,22 +338,19 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                         last_conn_type = 'axonArbors'
                         break
 
-                    # TODO: Check use of Predicate is okay. Maybe: Plus(Predicate())..?
                     for n in finditer(Predicate(lowercase_is_in(regions)), segment):
                         r, s = n.span()
                         region_name = ' '.join([comp.token for comp in segment[r:s]]).lower()
                         if region_name not in regions:
-                            # TODO: Handle this. We should probably have the grammar require it.
                             log.error('Unknown region name: ' + region_name)
+                            # TODO: Handle gracefully.
                         else:
                             region_name = regions[region_name]
-                            # NOTE: We assuem there's exactly one region per segment
+                            # NOTE: We assume there's exactly one region per segment
                     # NOTE: We assume last_conn_type was set at least initially--based on our grammar
-                    # TODO: Don't assume the user meant us to parse connectives this way.
                     conn_region = HasType(last_conn_type)
                     conn_region += HasRegion(region_name)
 
-                    # connection_nodes.append( HasType( last_conn_type ) + HasRegion( region_name ) )
                     connection_nodes.append(conn_region)
 
                 # NOTE: We assume there is at least one element in connection_nodes
@@ -337,17 +376,14 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                     has_modifiers.append(connective)
             if 'is_connecting' in m:
                 p, q = m['is_connecting']
-                # NOTE: We only support declaring connections between two regions. TODO: Support more?
                 region_pair = []
-                # NOTE: We don't support regions + subregions--they're counted as separate regions.
-                # TODO: Support subregions.
                 for n in finditer(Predicate(lowercase_is_in(regions)), matchwords[p:q]):
                     r, s = n.span()
                     r, s = r + p, s + p  # Get the offset from matchwords
                     region_name = ' '.join([comp.token for comp in matchwords[r:s]]).lower()
                     if region_name not in regions:
-                        # TODO: Handle this. We should probably have the grammar require it.
                         log.error('Unknown region name: ' + region_name)
+                        # TODO: Handle gracefully
                     else:
                         region_pair.append(regions[region_name])
                 # Check that there were exactly two regions. NOTE: This could be enforced by the grammar.
@@ -380,7 +416,6 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
 
     # We could attach the prep. phrases (e.g. "in [regions]") to previous subqueries
     # only if they don't already have their own prep. phrase.
-    # NOTE: There's probably a nicer way to do these iterations in Python
     """
     subquery_list = subquery_list[::-1]
     prev_ownedby = subquery_list[0][1]
@@ -393,10 +428,10 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
             prev_ownedby = ownedby
     """
 
-    # TODO: Change this. We should not assume subqueries are always "disjuncted" together.
     if len(subquery_list) == 1:
         final_query = subquery_list[0][0]
     else:
+        # NOTE: We currently assume set union across subqueries
         final_query = IsOrOp()
         # NOTE: If prep. phrase attaching, ownedby data should be considered stale at this point;
         #       queries themselves would have been updated with "owned_by" relation info.
@@ -407,15 +442,11 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
     # NOTE: We parse queries with an opener for each subquery, but currently only use the last
     if getattr(match, 'opener', None):
         form_lems = match.opener.lemmas
-        # TODO: 'unhide' as add, or something else (pin/unpin related)?
-        if 'add' in form_lems:  # or 'unhide' in form_lems:
-            # final_query += UpdatesState( '__add__' )
+        if 'add' in form_lems:
             final_query += HasVerb('add')
-        elif 'remove' in form_lems:  # or 'hide' in form_lems:
-            # final_query += UpdatesState( '__sub__' )
+        elif 'remove' in form_lems:
             final_query += HasVerb('remove')
         elif 'keep' in form_lems or 'retain' in form_lems:
-            # final_query += UpdatesState( '__and__' )
             final_query += HasVerb('keep')
         elif 'list' in form_lems:
             formatting = 'information'
@@ -468,6 +499,7 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
     return final_query, "enum"
 
 def interpret_NeuronsQuery_MoreGeneral(self, match):
+    #print "interpret_NeuronsQuery_MoreGeneral", match._words, match.words, match._particles
     neuron = IsNeuron() + HasClass('Neuron')
 
     # NOTE: "format" group overrides any "opener" group--for formatting
@@ -499,16 +531,12 @@ def interpret_NeuronsQuery_MoreGeneral(self, match):
             modifier = get_name_expression(mods[0])
             neuron = neuron + Has(modifier)
         elif len(mods) > 1:
-            # TODO: We assume this is a conjunction of modifiers for now, but we'll likely want to support disjs.
-            andop = IsAndOp()
+            # NOTE: We assume this is a disjunction of modifiers for now
+            andop = IsOrOp()
             for mod in mods:
                 modifier = get_name_expression(mod)
                 andop += HasPart(modifier)
             neuron += Has(andop)
-    # TODO: Should the `transmitters` data be combined with transmitter-
-    #       related data in the `neuron_modifiers`?
-    # TODO: Check if there are "conflicts" between stated transmitters in
-    #       `transmitters` vs. `neuron_modifiers`?
     if getattr(match, "transmitters", None):
         mods = []
         # NOTE: The following assumes whitespace separates adjnouns:
@@ -520,8 +548,8 @@ def interpret_NeuronsQuery_MoreGeneral(self, match):
             modifier = get_name_expression(mods[0])
             neuron = neuron + Has(modifier)
         elif len(mods) > 1:
-            # TODO: We assume this is a conjunction of modifiers for now, but we'll likely want to support disjs.
-            andop = IsAndOp()
+            # NOTE: We assume this is a disjunction of modifiers for now
+            andop = IsOrOp()
             for mod in modifiers:
                 modifier = get_name_expression(mod)
                 andop += HasPart(modifier)
@@ -536,16 +564,12 @@ def interpret_NeuronsQuery_MoreGeneral(self, match):
         marker = IsGeneticMarker() + HasName(match.expressing_marker.lemmas)
         neuron = neuron + HasGeneticMarker(marker)
     if getattr(match, "conn_quant", None):
-        # TODO: Probably want to support "more than", "less than", and
-        #       "[empty string]"--for equality
         quantdir = IsNumConnections()
-        # TODO: Don't use finditer; just do a search
+        # TODO: Don't use finditer; just do a search. Clean this up.
         for n in finditer(Pos("CD"), match.conn_quant):
             r, s = n.span()
-            # TODO: Join with a space? Is the list ever longer than 1, anyway?
             conn_num = ' '.join([c.token for c in match.conn_quant[r:s]])
-            # TODO: Again, don't use finditer. And would be nice to have if/elif branches
-            moreorless = False  # See above...
+            moreorless = False
             for o in finditer(Lemmas("more than"), match.conn_quant):
                 quantdir = quantdir + HasMoreThan(conn_num)
                 moreorless = True

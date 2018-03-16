@@ -1,3 +1,5 @@
+# The "DSL" used with Quepy. Specifies the nodes and properties that may be found in the SAST.
+
 from quepy.dsl import FixedType, FixedRelation, FixedDataRelation
 
 class NAType(FixedType):
@@ -68,6 +70,9 @@ class IsGeneticMarker(NAType):
 class IsNumConnections(NAType):
     fixedtype = "numNeuronConnections"
 
+class IsNumSynapses(NAType):
+    fixedtype = "numSynapses"
+
 class OwnedBy(FixedRelation):
     relation = "owns"
     reverse = True
@@ -119,6 +124,12 @@ class HasMoreThan(FixedDataRelation):
 
 class HasLessThan(FixedDataRelation):
     relation = "hasLessThan"
+
+class HasAtLeast(FixedDataRelation):
+    relation = "hasAtLeast"
+
+class HasAtMost(FixedDataRelation):
+    relation = "hasAtMost"
 
 class HasConnectionsTarget(FixedDataRelation):
     relation = "hasConnectionsTarget"

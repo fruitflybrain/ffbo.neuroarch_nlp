@@ -23,9 +23,11 @@ na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'po
                      'channel', 'expressing', 'process', 'processes', 'transmitting',
                      'cart', 'retina', 'innervate', 'innervating', 'innervation', 'cell',
                      'from', 'keep', 'retain', 'color', 'uncolor', 'pin', 'unpin', 'blink',
-                     'unblink', 'animate', 'unanimate', 'unhide',
+                     'unblink', 'animate', 'unanimate', 'unhide', 
                      'connections', 'axons', 'dendrites', 'neurons', 'arborizations',
-                     'inputs', 'outputs', 'interneurons', 'innervations', 'cells' ])
+                     'inputs', 'outputs', 'interneurons', 'innervations', 'cells',
+                     'than','atleast','least','at','most','atmost','more','less',
+                     'synapse','synapses'])
 
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )
@@ -45,7 +47,6 @@ class PrototypeBaselineTranslator(object):
             then that setting will be considered "disambiguating" and will be used.
         """
         nl_string = nl_string.strip()
-
         if spell_correct:
             nl_string = self.correct_spelling( nl_string )
             if nl_string == '':
@@ -66,7 +67,7 @@ class PrototypeBaselineTranslator(object):
         """ Perform basic spelling correction. Input is tokenized by whitespace, and an edit distance
             is computed for each token that is not an integer or hexidecimal value corresponding to
             a RGB color encoding.:w
-            """
+        """
         # NOTE: Currently, we're doing spelling-correction before any other step
         #       (e.g. tokenization, lemmatization). TODO: This will likely change.
         corr_words = []
@@ -80,7 +81,10 @@ class PrototypeBaselineTranslator(object):
                 corr_word = process.extractOne( word.lower(), na_unigrams, scorer=fuzz.ratio, score_cutoff=80 )
                 if corr_word:
                     corr_words.append( corr_word[0] )  # [0] is the word, [1] is its score
-                    # NOTE: We drop words that are not in our "dictionary"
+                # NOTE: Original implementation dropped words that are not in our "dictionary"
+                else:
+                    corr_words.append(word.lower())
         return ' '.join( corr_words )
 
+# Currently included for compatibility with existing FFBO architecture. Likely to change.
 Translator = PrototypeBaselineTranslator

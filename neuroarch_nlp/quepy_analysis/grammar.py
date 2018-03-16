@@ -70,6 +70,8 @@ adjnoun = P('JJ') | noun
 nouns = Plus(noun)
 adjnouns = Plus(adjnoun)
 
+# As stated in the README, consider using similarity/distance metrics
+# (which could, e.g., be incorporated with Predicate)
 action_keywords = {'show', 'list', 'graph', 'visualize', 'display', 'add',
                    'remove', 'hide', 'keep', 'retain', 'pin', 'unpin', 'unhide',
                    'color', 'uncolor', 'animate', 'unanimate', 'blink', 'unblink'}
@@ -97,7 +99,7 @@ transmitters_clause = ( ( Qu(L('that')|L('which')) + (L('transmit')|L('release')
 brainregion = Qu(P('DT')) + notneurons
 brainregion2 = Qu(P('DT')) + R( lowercase_is_in(regions) )
 
-in_lem = Qu(L('be')) + (L('in') | L('within') | (L('inside') + Qu(L('of'))) | L('of') | L('from'))
+in_lem = Qu(L('be')) + (L('in') | L('within') | (L('inside') + Qu(L('of'))) | L('of') | L('from')) + Star(L('both'))
 
 connection_cnoun = ( Qu(L('synaptic')) + L('connection') ) \
                  | ( L('dendrite') | L('axon') | L('process') | L('input') | L('output') ) \
@@ -114,48 +116,37 @@ connections_clause = G( ( ( ( L('with') | (Qu(L('that')) + L('have')) )
                         + brainregion2 + Star( Qu(P(',')) + (L('and')|L('or'))
                                                + Qu(connections) + brainregion2 ), 'connections_clause' )
 
-is_connecting = Qu(L('that')) + Qu(L('be')) + L('connect') + G(
-                brainregion2 + (L('to') | L('and')) + brainregion2, 'is_connecting' )
-
+is_connecting = Qu(L('that')) + Qu(L('be')) + Qu(L('have')) + ( L('connect') |  L('connection') | L('accept') | L('project') | L('projection')) + Qu(L('from')) + \
+                            G(brainregion2 + (L('to') | L('and')) + brainregion2, 'is_connecting' )
 in_quant_conns = P('IN') \
                + G( Qu((L('more') | L('less')) + L('than')) + P('CD') + L('column'), 'conn_quant' )
 
-in_region_list = brainregion2 + Star(
+synapse_type = G( (L('axo-axonic') | L('dendro-dendritic') | L('modulatory') | L('regular')),'synapse_type')
+synapse_num_clause = ( Qu( L('with') | (Qu(L('that')) + L('have')) | L( 'connect') ) + \
+                G( ((( L('more') | L('less') ) + L('than') ) | L('atleast') | (L('at') + L('least')) | L('atmost') | (L('at') + L('most'))) + P('CD') + \
+                Qu(synapse_type) + \
+                ( L('synapse') | L('connection') | L('synapses') | L('connections') ), 'synapse_num_clause' ))
+
+in_region_list = Star(L('both')) + brainregion2 + Star(
                  (in_lem | (Qu(P(',')) + (L('and') | L('or')) + Qu(L('not')) + Qu(in_lem))) + brainregion2)
 
-clause = expressing_marker | transmitters_clause | connections_clause | is_connecting | in_quant_conns
+clause = expressing_marker | transmitters_clause | connections_clause | is_connecting | synapse_num_clause | synapse_type
 
 clauses = clause + Star(Qu(P(',')) + Qu(L('and') | L('or')) + clause)
-
+                            
 synaptic_phrase = G( Qu( L('presynaptic') | L('postsynaptic') )
                    + Qu( Qu(P(',')|L('and')|L('or'))
-                         + (L('presynaptic') | L('postsynaptic')) )
+                   + (L('presynaptic') | L('postsynaptic')) )
                    + L('to')
                    + Qu( universal_quantifier ) + Qu(L('of')) + Qu(P('DT'))
-                   + Qu( neuron_modifiers )
-                   + neurons
+                   + ( (Qu( neuron_modifiers ) + neurons) | (neuron_modifiers + Qu(neurons)) )
                    + Qu( clauses )
                    + Qu( Qu(L('and')|L('or'))
                          + in_lem + G( in_region_list, 'region_list' ) ), 'synaptic_phrase' )
 
 color = R(is_color)
 
-# End grammar work.
 ###############################################
-
-# Possibilities:
-# * Consider using a similarity/distance metric (which could, e.g., be incorporated with Predicate)
-#   This could be useful for, e.g. detecting the "(action) verbs" that indicate user imperatives
-# * Support conjunctions and disjunctions, in general
-# * Support negations
-# * Support grouping (e.g. via parentheses) in user input
-#   e.g. "Show ((l1 and columnar) or gabaergic) neurons"
-# * Support different verbs per subquery
-#   e.g. "Add [subquery] and remove [subquery]"
-#   Though keep in mind that, for such a query, the 'and' is not a logical 'and'.
-#   This could also include
-# * Support multiple formats per subquery
-
 
 from .grammar_semantics import interpret_NeuronsQuery_MoreGeneral, interpret_NeuronsQuery_MoreSpecific, \
     interpret_ColorCommand, interpret_VerbCommand, interpret_ClearAllCommand, \
@@ -167,11 +158,12 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
     subquery = G(Qu(opener), 'opener') \
                + Qu(universal_quantifier) + Qu(L('of')) \
                + Qu(L('the') | L('a') | L('an')) \
-               + Qu(neuron_modifiers) + neurons \
+               + ( (Qu( neuron_modifiers ) + neurons) | (neuron_modifiers + Qu(neurons)) ) \
                + (Qu(synaptic_phrase) + Qu(clauses)) \
                + Qu(Qu(L('and') | L('or')) \
-                    + in_lem + G(in_region_list, 'region_list'))
-
+                    + in_lem + G(in_region_list, 'region_list')) + \
+               Qu(clauses)
+                   
     subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
 
     regex = subqueries \
@@ -182,17 +174,19 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
     def interpret(self, match):
         return interpret_NeuronsQuery_MoreSpecific( self, match )
 
+'''
 class NeuronsQuery_MoreSpecific2(QuestionTemplate):
+    #Should be redundant now
     weight = 2
 
     subquery = G(Qu(opener), 'opener') \
                + Qu(universal_quantifier) + Qu(L('of')) \
                + Qu(L('the') | L('a') | L('an')) \
-               + neuron_modifiers \
+               + neuron_modifiers + Qu(neurons)\
                + (Qu(synaptic_phrase) + Qu(clauses)) \
                + Qu(Qu(L('and') | L('or')) \
-                    + in_lem + G(in_region_list, 'region_list'))
-
+                    + in_lem + G(in_region_list, 'region_list')) + \
+               Qu(clauses)
     subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
 
     regex = subqueries \
@@ -201,24 +195,21 @@ class NeuronsQuery_MoreSpecific2(QuestionTemplate):
             + Qu(P('.'))
 
     def interpret(self, match):
+        print 'more specific 2'
         return interpret_NeuronsQuery_MoreSpecific( self, match )
 
 class NeuronsQuery_MoreGeneral(QuestionTemplate):
     """
         e.g. "Show all neurons in the Lamina."
+        This is an older class which could benefit from some of the "clauses" above.
     """
 
     neuron_modifier_list = (P('JJ') | P('NN')) \
                            + Star(Qu(L('and') | P(',')) + (P('JJ') | P('NN')))
-    # neuron_modifier_list2 is named as such because it's more in line with what we'd like
+    # neuron_modifier_list2 is more in line with what we'd like
     # neuron_modifier_list to be (but cannot currently be because of its context).
+    # TODO: Review this.
     neuron_modifier_list2 = adjnoun + Star(Qu(L('and') | P(',')) + adjnoun)
-
-    # TODO: Use this
-    neuron_name_list = (P('NNP') | P('NN')) \
-                       + Star(Qu(L('and') | P(',')) + (P('NNP') | P('NN')))
-
-    expressing_marker = L('express') + G(nouns, 'expressing_marker')
 
     transmitters_clause = \
         ((Qu(L('that') | L('which')) + (L('transmit') | L('release'))) |
@@ -232,18 +223,13 @@ class NeuronsQuery_MoreGeneral(QuestionTemplate):
             | L('process'))) \
         | L('arborize')
 
-    in_quant_conns = P('IN') + G(Qu((L('more') | L('less'))
-                                    + L('than')) + P('CD') + L('column'), 'conn_quant')
-
-    brainregion = Qu(P('DT')) + notneurons
-
     in_lem = L('in') | L('within') | L('inside') | Ls('inside of')
     in_region_list = brainregion + Star(
         ((Qu(P(',')) + L('and') + Qu(L('not')) + Qu(in_lem))
          | (Qu(P(',')) + L('or') + Qu(L('not')) + Qu(in_lem))
          | in_lem) + brainregion)
 
-    clause = expressing_marker | transmitters_clause | connections_clause | in_quant_conns
+    clause = expressing_marker | transmitters_clause | connections_clause | in_quant_conns | synapse_num_clause
     clauses = clause + Star(Qu(P(',')) + Qu(L('and') | L('or')) + clause)
 
     subquery = G(Qu(opener), 'opener') \
@@ -261,13 +247,12 @@ class NeuronsQuery_MoreGeneral(QuestionTemplate):
 
     def interpret(self, match):
         return interpret_NeuronsQuery_MoreGeneral( self, match )
-
+'''
 
 class ColorCommand(QuestionTemplate):
     """
         e.g. Color, Color [color]
     """
-
     regex = L('color') + Qu( G( R(is_color), 'color' ) ) + Qu(P('.'))
 
     def interpret( self, match ):
@@ -288,7 +273,6 @@ class ClearAllCommand(QuestionTemplate):
     """
         e.g. Restart, Clear, Clear all
     """
-
     regex = (L('restart') | L('clear')) + Qu( L('all') ) + \
             Qu( P('.') )
 
@@ -302,7 +286,6 @@ class ClearSomeCommand(QuestionTemplate):
         Undo (previous|last)? [AMOUNT]?
         Clear (previous|last) [AMOUNT]?
     """
-
     prev_or_last = L('previous') | L('last')
 
     regex = ( (L('undo') + Qu(prev_or_last))

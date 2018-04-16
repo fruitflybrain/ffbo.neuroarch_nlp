@@ -4,6 +4,7 @@ import defaults
 # You'll want to dynamically load these and other values from your database(s).
 
 neuropils = defaults.neuropils
+arborization_regions = defaults.arborization_regions
 subregions = defaults.subregions
 colors_values = defaults.colors_values
 transmitters = defaults.transmitters

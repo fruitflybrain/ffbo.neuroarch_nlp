@@ -17,9 +17,9 @@ neuropils = [
         (['AMMC', 'ammc'],
             ['antennal mechanosensor and motor center', 'ammc']),
         ('AMMC',
-            ['right antennal mechanosensor and motor center', 'ammc_r']),
+            ['right antennal mechanosensor and motor center', 'ammc_r', 'right ammc']),
         ('ammc',
-            ['left antennal mechanosensor and motor center', 'ammc_l']),
+            ['left antennal mechanosensor and motor center', 'ammc_l', 'left ammc']),
         (['EB', 'PB', 'FB', 'NOD', 'nod'],
             ['central complex', 'cc', 'cx']),
         (['CCP', 'ccp'],
@@ -184,6 +184,17 @@ neuropils = [
         (['AMMC', 'ammc'],
             ['auditory'])
     ]
+
+arborization_regions = [('M1', ['medulla layer 1', 'm1', 'layer m1']),
+                        ('M2', ['medulla layer 2', 'm2', 'layer m2']),
+                        ('M3', ['medulla layer 3', 'm3', 'layer m3']),
+                        ('M4', ['medulla layer 4', 'm4', 'layer m4']),
+                        ('M5', ['medulla layer 5', 'm5', 'layer m5']),
+                        ('M6', ['medulla layer 6', 'm6', 'layer m6']),
+                        ('M7', ['medulla layer 7', 'm7', 'layer m7']),
+                        ('M8', ['medulla layer 8', 'm8', 'layer m8']),
+                        ('M9', ['medulla layer 9', 'm9', 'layer m9']),
+                        ('M10', ['medulla layer 10', 'm10', 'layer m10'])]
 
 # 'subregion query name': (Class, Instance, Name)
 subregions = {
@@ -808,7 +819,9 @@ neuron_types = {
     'y3_y6_4': 'Y3_Y6_4',
     'y3_y6_5': 'Y3_Y6_5',
     'y3_y6': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
-    'y3': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5']
+    'y3': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
+    'fru': '/rfru-F-[0-9]+',
+    'fruitless': '/rfru-F-[0-9]+'
 }
 
 localities = {

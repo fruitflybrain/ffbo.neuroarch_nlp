@@ -2,11 +2,12 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import re
 
-from quepy_analysis.grammar import modifiers_and_regions
+from quepy_analysis.grammar import modifiers_and_regions, arborization_regions
 from .data import colors_values
 
+
 na_unigrams = { unigram
-                for term in modifiers_and_regions.keys() + colors_values.keys()
+                for term in modifiers_and_regions.keys() + colors_values.keys() + arborization_regions.keys()
                 for unigram in term.split() }
 # This is for (the temporary) spelling-correction. It, in part, results in a model that performs
 # spelling correction on words not found in its (current--at time of writing) grammar.

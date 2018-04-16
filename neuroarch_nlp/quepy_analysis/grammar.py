@@ -4,8 +4,9 @@ from quepy.parsing import Lemma, Lemmas, Pos, QuestionTemplate
 import logging
 log = logging.getLogger('neuroarch_nlp.quepy_analysis.grammar')
 
-from ..data import neuropils as raw_neuropils, subregions, colors_values, transmitters, neuron_types, \
-                   localities, synapticities, ownerinstances, othermods
+from ..data import neuropils as raw_neuropils, arborization_regions as raw_arborization_regions, \
+    subregions, colors_values, transmitters, neuron_types, \
+    localities, synapticities, ownerinstances, othermods
 
 # NOTE: In general, this code is very much "under construction": there are known bugs,
 #       it is incomplete, and it can be more efficient (and easier for a human to interpret).
@@ -28,12 +29,20 @@ modifiers = { k: v for k, v in
 neuropils = { string: db_rep
               for db_rep, string_reps in raw_neuropils
               for string in string_reps }
+
+arborization_regions = { string: db_rep
+                         for db_rep, string_reps in raw_arborization_regions
+                         for string in string_reps }
+
+
 # "Regions" is used here more generally to apply to neuropils, cartridges, or channels
 regions = { k: v for k, v in
             neuropils.items() + subregions.items() }
+arbregions = { k: v for k, v in
+            neuropils.items() + arborization_regions.items() }
 
 modifiers_and_regions = { k: v for k, v in
-                          modifiers.items() + regions.items() }
+                          modifiers.items() + regions.items()}
 
 notneurons = Plus( R(lambda token: token is not None
                                and token.lemma not in {'neuron', 'interneuron', 'interneurons'}
@@ -98,6 +107,7 @@ transmitters_clause = ( ( Qu(L('that')|L('which')) + (L('transmit')|L('release')
 
 brainregion = Qu(P('DT')) + notneurons
 brainregion2 = Qu(P('DT')) + R( lowercase_is_in(regions) )
+brainregion_arb = Qu(P('DT')) + R( lowercase_is_in(arbregions) )
 
 in_lem = Qu(L('be')) + (L('in') | L('within') | (L('inside') + Qu(L('of'))) | L('of') | L('from')) + Star(L('both'))
 
@@ -113,11 +123,11 @@ connections = ( Qu( L('with') | (Qu(L('that')) + L('have')) )
 connections_clause = G( ( ( ( L('with') | (Qu(L('that')) + L('have')) )
                             + connection_cnoun + in_lem )
                           | ( Qu(L('that') | L('which')) + (L('innervate') | L('arborize')) + Qu(in_lem) ) )
-                        + brainregion2 + Star( Qu(P(',')) + (L('and')|L('or'))
-                                               + Qu(connections) + brainregion2 ), 'connections_clause' )
+                        + brainregion_arb + Star( Qu(P(',')) + (L('and')|L('or'))
+                                               + Qu(connections) + brainregion_arb ), 'connections_clause' )
 
 is_connecting = Qu(L('that')) + Qu(L('be')) + Qu(L('have')) + ( L('connect') |  L('connection') | L('accept') | L('project') | L('projection')) + Qu(L('from')) + \
-                            G(brainregion2 + (L('to') | L('and')) + brainregion2, 'is_connecting' )
+                            G(brainregion_arb + (L('to') | L('and')) + brainregion_arb, 'is_connecting' )
 in_quant_conns = P('IN') \
                + G( Qu((L('more') | L('less')) + L('than')) + P('CD') + L('column'), 'conn_quant' )
 

@@ -13,7 +13,7 @@ from .dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, Presynapti
     IsCommand, IsNumSynapses, HasAtLeast, HasAtMost
 from .grammar import neuron_types, synapticities, localities, transmitters, modifiers, \
                      neuropils, regions, lowercase_is_in, adjnoun, notneurons, modifiers_and_regions, colors_values, \
-                     subregions#,ownerinstances
+                     subregions, arborization_regions, arbregions#,ownerinstances
 
 syn_num = None
 
@@ -62,6 +62,10 @@ def get_name_expression( name, syn_to=None ):
             expr+=HasInstance(subregions[name][1])
         if subregions[name][2]:
             expr+=HasName(subregions[name][2])
+    elif name in arborization_regions:
+        print name, arborization_regions[name]
+        expr = IsBrainRegion()
+        expr += HasName(arborization_regions[name])
     else:
         # NOTE: This is basically a catch-all, and the generated expression
         #       is unlikely to be useful. Raise an exception, and/or log this?
@@ -338,14 +342,14 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                         last_conn_type = 'axonArbors'
                         break
 
-                    for n in finditer(Predicate(lowercase_is_in(regions)), segment):
+                    for n in finditer(Predicate(lowercase_is_in(arbregions)), segment):
                         r, s = n.span()
                         region_name = ' '.join([comp.token for comp in segment[r:s]]).lower()
-                        if region_name not in regions:
+                        if region_name not in arbregions:
                             log.error('Unknown region name: ' + region_name)
                             # TODO: Handle gracefully.
                         else:
-                            region_name = regions[region_name]
+                            region_name = arbregions[region_name]
                             # NOTE: We assume there's exactly one region per segment
                     # NOTE: We assume last_conn_type was set at least initially--based on our grammar
                     conn_region = HasType(last_conn_type)
@@ -377,15 +381,15 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
             if 'is_connecting' in m:
                 p, q = m['is_connecting']
                 region_pair = []
-                for n in finditer(Predicate(lowercase_is_in(regions)), matchwords[p:q]):
+                for n in finditer(Predicate(lowercase_is_in(arbregions)), matchwords[p:q]):
                     r, s = n.span()
                     r, s = r + p, s + p  # Get the offset from matchwords
                     region_name = ' '.join([comp.token for comp in matchwords[r:s]]).lower()
-                    if region_name not in regions:
+                    if region_name not in arbregions:
                         log.error('Unknown region name: ' + region_name)
                         # TODO: Handle gracefully
                     else:
-                        region_pair.append(regions[region_name])
+                        region_pair.append(arbregions[region_name])
                 # Check that there were exactly two regions. NOTE: This could be enforced by the grammar.
                 if len(region_pair) == 2:
                     # NOTE: We assume the first region we parse is the "from" region.

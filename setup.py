@@ -1,10 +1,12 @@
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 
 # NOTE: The "diffdata" package is only used to nicely display differences during testing.
 #    install_requires=["diffdata"],
+
+
 
 setup(
     name="neuroarch_nlp",
@@ -33,5 +35,5 @@ setup(
     install_requires = [
         'fuzzywuzzy >= 0.12.0', 'datadiff'
     ],
-    packages=["neuroarch_nlp","neuroarch_nlp.quepy_analysis"]
+    packages = find_packages()
 )

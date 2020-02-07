@@ -24,7 +24,7 @@ na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'po
                      'channel', 'expressing', 'process', 'processes', 'transmitting',
                      'cart', 'retina', 'innervate', 'innervating', 'innervation', 'cell',
                      'from', 'keep', 'retain', 'color', 'uncolor', 'pin', 'unpin', 'blink',
-                     'unblink', 'animate', 'unanimate', 'unhide', 
+                     'unblink', 'animate', 'unanimate', 'unhide',
                      'connections', 'axons', 'dendrites', 'neurons', 'arborizations',
                      'inputs', 'outputs', 'interneurons', 'innervations', 'cells',
                      'than','atleast','least','at','most','atmost','more','less',
@@ -47,6 +47,15 @@ class PrototypeBaselineTranslator(object):
             but if the user inputs a specific format (i.e. outside of the NL query),
             then that setting will be considered "disambiguating" and will be used.
         """
+        reg_exp = None
+        if '/r' in nl_string:
+            exps = nl_string.split('/r')
+            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            reg_exp = '/r{}'.format(exps[1])
+        elif '$' in nl_string:
+            exps = nl_string.split('$')
+            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            reg_exp = '/r(.*){}(.*)'.format(exps[1])
         nl_string = nl_string.strip()
         if spell_correct:
             nl_string = self.correct_spelling( nl_string )
@@ -56,6 +65,14 @@ class PrototypeBaselineTranslator(object):
         # The target and metadata (1st and 3rd returned value) from quepy are ignored
         _, na_query, _ = self.translate( nl_string )
 
+        if reg_exp is not None:
+            for n in na_query['query']:
+                try:
+                    n['action']['method']['query']['name'] = reg_exp
+                    break
+                except KeyError:
+                    continue
+        
         if na_query:
             na_query[ 'user' ] = user
             if format_type:

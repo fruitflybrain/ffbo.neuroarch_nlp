@@ -68,11 +68,13 @@ class PrototypeBaselineTranslator(object):
         if reg_exp is not None:
             for n in na_query['query']:
                 try:
-                    n['action']['method']['query']['name'] = reg_exp
+                    if 'name' in n['action']['method']['query']:
+                        n['action']['method']['query']['uname'] = reg_exp
+                        n['action']['method']['query'].pop('name')
                     break
                 except KeyError:
                     continue
-        
+
         if na_query:
             na_query[ 'user' ] = user
             if format_type:

@@ -764,9 +764,12 @@ transmitters = {
 }
 
 neuron_types = {
-    'osn':'OSN','orn':'OSN','olfactory sensory neurons':'OSN',
-    'olfactory sensory neuron':'OSN','olfactory receptor neuron':'OSN',
-    'olfactory receptor neurons':'OSN',
+    'osn':'/r(.*)ORN(.*)',
+    'orn':'/r(.*)ORN(.*)',
+    'olfactory sensory neurons':'/r(.*)ORN(.*)',
+    'olfactory sensory neuron':'/r(.*)ORN(.*)',
+    'olfactory receptor neuron':'/r(.*)ORN(.*)',
+    'olfactory receptor neurons':'/r(.*)ORN(.*)',
      # 'pn':['PN','mPN'],
     'pn': '/r(.*)PN(.*)',
     'principal neuron':['PN','mPN'],

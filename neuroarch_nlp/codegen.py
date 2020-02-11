@@ -165,7 +165,7 @@ def generate_json( sast ):
                         #node_edge_val.pop( has_nid, None )
                         nodes_to_delete.append( has_nid )
                         node_edge_val[nid].pop( 'has', None )
-                        
+
                 elif node_edge_val[has_nid].get('type',None) == 'synapticConnection':
                     for rel in node_edge_val[has_nid]:
                         if rel != 'type':
@@ -235,7 +235,7 @@ def generate_json( sast ):
                 #       e.g. at least by only bothering to set_owners() if get_owner() changed the ID.
 
     root = get_owner( sast.head )
-    set_owners( sast.head )        
+    set_owners( sast.head )
 
     def get_node_najson( memory, op, node_id ):
         """ Given a node in the SAST,
@@ -262,7 +262,7 @@ def generate_json( sast ):
             for part in node['part']:
                 retlist += get_node_najson( memory + len(retlist), op, part )
                 if lastlen: # TODO: Make sure this is okay if lastlen == 0
-            
+
                     retlist.append(
                         {"action":{ "op":{ "__and__":{ "memory": len(retlist) - lastlen}}}, "object":{"memory": 0}})
                 lastlen = len( retlist )
@@ -279,8 +279,13 @@ def generate_json( sast ):
             if ntype == 'region':
                 # NOTE: We consider "class" (in our SAST) to refer to "node_class" (in NA)
                 if 'class' in node:
-                    outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
-                        {'method': {'traverse_owns': {'cls': node['class']} } } }
+                    # outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
+                    #     {'method': {'traverse_owns': {'cls': node['class']} } } }
+
+                    outdict = { 'object': {'memory':  memory + len(retlist)},
+                        'action': {'method': {'gen_traversal_in': \
+                              {"min_depth": 1, \
+                               "pass_through": ["ArborizesIn", node['class']]} } }}
                     retlist.append( outdict )
                 elif 'instance' in node:
                     outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
@@ -296,8 +301,12 @@ def generate_json( sast ):
                 if 'region' in node:
                     if isinstance(node['region'],dict):
                         if 'class' in node['region']:
-                            retlist.append({ 'object': {'memory': 0},
-                                             'action': {'method': {'traverse_owns': {'cls': node['region']['class']}} } } )
+                            # retlist.append({ 'object': {'memory': 0},
+                            #                  'action': {'method': {'traverse_owns': {'cls': node['region']['class']}} } } )
+                            retlist.append( { 'object': {'memory':  0},
+                                'action': {'method': {'gen_traversal_in': \
+                                      {"min_depth": 1, \
+                                       "pass_through": ["ArborizesIn", node['region']['class']]} } }} )
                         if 'instance' in node['region']:
                             retlist.append({ 'object': {'memory': 0},
                                              'action': {'method': {'traverse_owns': {'instanceof': node['region']['instance']}} } } )
@@ -307,16 +316,26 @@ def generate_json( sast ):
                     else:
                         retlist.append( { 'object': {'class': 'Neuropil'},
                                           'action': {'method': {'query': {'name': node['region']}}} } )
-                        retlist.append( { 'object': {'memory': 0},
-                                          'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                        # retlist.append( { 'object': {'memory': 0},
+                        #                   'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                        retlist.append( { 'object': {'memory':  0},
+                            'action': {'method': {'gen_traversal_in': \
+                                  {"min_depth": 1, \
+                                   "pass_through": ["ArborizesIn", node['class']]} } }})
                         retlist.append( { 'object': {'memory': 0},
                                           'action': {'op': {'__and__': {'memory': 2}}} } )
                 if 'class' in node:
                     #outdict = { 'object': {'memory': memory + len(retlist)}, 'action': \
                     #    {'method': {'traverse_owns': {'cls': node['class']} } } }
-                    outdict = { 'object': {'memory': 0}, 'action': \
-                        {'method': {'traverse_owns': {'cls': node['class']} } } }
-                    
+                    # outdict = { 'object': {'memory': 0}, 'action': \
+                    #     {'method': {'traverse_owns': {'cls': node['class']} } } }
+
+                    # SHOW NEURONS IN [NEUROPIL] ends here
+                    outdict = { 'object': {'memory': 0},
+                        'action': {'method': {'gen_traversal_in': \
+                              {"pass_through": ["ArborizesIn", node['class']],\
+                               "min_depth": 1}}}}
+
                     retlist.append( outdict )
                 else:
                     log.warning( "Neuron has no '(node_)class'!" )
@@ -391,10 +410,14 @@ def generate_json( sast ):
                 else:
                     return retlist
                 # NOTE: We assume we're looking for Neurons
+                # retlist.append( { 'object': {'memory': 0},
+                #     'action': {'method': {'traverse_owns': {'cls': 'Neuron'}} } } )
                 retlist.append( { 'object': {'memory': 0},
-                    'action': {'method': {'traverse_owns': {'cls': 'Neuron'}} } } )
-                retlist.append( { 'object': {'memory': 0},
-                    'action': {'op': {'__and__': {'memory': memory + len(retlist)}}} } )
+                    'action': {'method': {'gen_traversal_in': \
+                          {"min_depth": 1, \
+                           "pass_through": ["ArborizesIn", "Neuron"]} } }})
+                # retlist.append( { 'object': {'memory': 0},
+                #     'action': {'op': {'__and__': {'memory': memory + len(retlist)}}} } )
                 # TODO: Or just 'memory': 2 ?
             elif ntype == 'ownerInstance':
                 retlist.append( { 'object': {'class': 'Neuropil'},
@@ -567,18 +590,24 @@ def generate_json( sast ):
                                                          'min_depth': 1}} } } )
                     retlist += add_attributes()
                 elif 'arbors' in node:
-                    retlist.append( { 'object': {'class': 'ArborizationData'}, 'action':
-                        {'method': {'query': {'dendrites':node['arbors']}} } } )
-                    retlist.append( { 'object': {'memory': 0}, 'action':
-                        {'method': {'gen_traversal_in': {'pass_through':['HasData','Neuron'],
-                                                         'min_depth': 1}} } } )
-                    retlist.append( { 'object': {'class': 'ArborizationData'}, 'action':
-                        {'method': {'query': {'axons':node['arbors']}} } } )
-                    retlist.append( { 'object': {'memory': 0}, 'action':
-                        {'method': {'gen_traversal_in': {'pass_through':['HasData','Neuron'],
-                                                         'min_depth': 1}} } } )
-                    retlist.append( { 'object': {'memory': 0}, 'action':
-                        {'op': {'__or__': {'memory': 2} } } } )
+                    retlist.append( { 'object': {'class': 'Neuropil'},
+                                      'action': {'method': {'query': {'name': node['arbors']}}} } )
+                    retlist.append( { 'object': {'memory': 0},
+                        'action': {'method': {'gen_traversal_in': \
+                              {"min_depth": 1, \
+                               "pass_through": ["ArborizesIn", "Neuron"]} } }})
+                    # retlist.append( { 'object': {'class': 'ArborizationData'}, 'action':
+                    #     {'method': {'query': {'dendrites':node['arbors']}} } } )
+                    # retlist.append( { 'object': {'memory': 0}, 'action':
+                    #     {'method': {'gen_traversal_in': {'pass_through':['HasData','Neuron'],
+                    #                                      'min_depth': 1}} } } )
+                    # retlist.append( { 'object': {'class': 'ArborizationData'}, 'action':
+                    #     {'method': {'query': {'axons':node['arbors']}} } } )
+                    # retlist.append( { 'object': {'memory': 0}, 'action':
+                    #     {'method': {'gen_traversal_in': {'pass_through':['HasData','Neuron'],
+                    #                                      'min_depth': 1}} } } )
+                    # retlist.append( { 'object': {'memory': 0}, 'action':
+                    #     {'op': {'__or__': {'memory': 2} } } } )
                     retlist += add_attributes()
                 elif 'fromRegion' in node:
                     # NOTE: We assume 'toRegion' is also in node.
@@ -623,8 +652,12 @@ def generate_json( sast ):
                         else:
                             retlist.append( { 'object': {'class': 'Neuropil'},
                                               'action': {'method': {'query': {'name': params['region']}}} } )
+                        # retlist.append( { 'object': {'memory': 0},
+                        #                   'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
                         retlist.append( { 'object': {'memory': 0},
-                                          'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                            'action': {'method': {'gen_traversal_in': \
+                                  {"min_depth": 1, \
+                                   "pass_through": ["ArborizesIn", node['class']]} } }})
                         params.pop( 'region' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'ownerInstance' in params:
@@ -759,7 +792,7 @@ def generate_json( sast ):
                         "action": {"method": {"post_synaptic_neurons": {}}} } )
                 retlist.append(
                     {"action": {"op": {"__and__": {'memory': len(retlist) - lastlen}}}, "object": {"memory": 0}})
-                
+
         # NOTE: "Subregions" currently cannot be grouped with and/or operators--at the parse stage
         if 'subregion' in node:
             retlist += get_node_najson( 0, 'subregion', node['subregion'] )

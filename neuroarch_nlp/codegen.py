@@ -639,8 +639,8 @@ def generate_json( sast ):
                             if 'class' in params['region']:
                                 retlist.append( { 'object': {'class': 'Neuropil'},
                                                   'action': {'method': {'query': {}}} } )
-                                retlist.append({ 'object': {'memory': 0},
-                                                 'action': {'method': {'traverse_owns': {'cls': params['region']['class']}} } } )
+                                # retlist.append({ 'object': {'memory': 0},
+                                #                  'action': {'method': {'traverse_owns': {'cls': params['region']['class']}} } } )
                             if 'instance' in params['region']:
                                 retlist.append( { 'object': {'class': 'Neuropil'},
                                                   'action': {'method': {'query': {}}} } )
@@ -654,6 +654,7 @@ def generate_json( sast ):
                                               'action': {'method': {'query': {'name': params['region']}}} } )
                         # retlist.append( { 'object': {'memory': 0},
                         #                   'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
+                        # SHOW NEUROPIL ENDS HERE
                         retlist.append( { 'object': {'memory': 0},
                             'action': {'method': {'gen_traversal_in': \
                                   {"min_depth": 1, \

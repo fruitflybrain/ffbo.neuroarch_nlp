@@ -56,6 +56,12 @@ class PrototypeBaselineTranslator(object):
             exps = nl_string.split('$')
             nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
             reg_exp = '/r(.*){}(.*)'.format(exps[1])
+        elif '/[' in nl_string:
+            tmp = nl_string.split('[')
+            exps = [tmp[0]] + tmp[1].split(']')
+            print exps
+            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
         nl_string = nl_string.strip()
         if spell_correct:
             nl_string = self.correct_spelling( nl_string )
@@ -69,7 +75,7 @@ class PrototypeBaselineTranslator(object):
             for n in na_query['query']:
                 try:
                     if 'name' in n['action']['method']['query']:
-                        n['action']['method']['query']['uname'] = reg_exp
+                        n['action']['method']['query']['any()'] = reg_exp
                         n['action']['method']['query'].pop('name')
                     break
                 except KeyError:

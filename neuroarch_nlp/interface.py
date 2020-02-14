@@ -47,46 +47,49 @@ class PrototypeBaselineTranslator(object):
             but if the user inputs a specific format (i.e. outside of the NL query),
             then that setting will be considered "disambiguating" and will be used.
         """
-        reg_exp = None
-        if '/r' in nl_string:
-            exps = nl_string.split('/r')
-            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-            reg_exp = '/r{}'.format(exps[1])
-        elif '$' in nl_string:
-            exps = nl_string.split('$')
-            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-            reg_exp = '/r(.*){}(.*)'.format(exps[1])
-        elif '/[' in nl_string:
-            tmp = nl_string.split('[')
-            exps = [tmp[0]] + tmp[1].split(']')
-            print exps
-            nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-            reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
-        nl_string = nl_string.strip()
-        if spell_correct:
-            nl_string = self.correct_spelling( nl_string )
-            if nl_string == '':
-                return { 'user': user, 'format': format_type }
+        try:
+            reg_exp = None
+            if '/r' in nl_string:
+                exps = nl_string.split('/r')
+                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+                reg_exp = '/r{}'.format(exps[1])
+            elif '$' in nl_string:
+                exps = nl_string.split('$')
+                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+                reg_exp = '/r(.*){}(.*)'.format(exps[1])
+            elif '/[' in nl_string:
+                tmp = nl_string.split('[')
+                exps = [tmp[0]] + tmp[1].split(']')
+                print exps
+                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+                reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
+            nl_string = nl_string.strip()
+            if spell_correct:
+                nl_string = self.correct_spelling( nl_string )
+                if nl_string == '':
+                    return { 'user': user, 'format': format_type }
 
-        # The target and metadata (1st and 3rd returned value) from quepy are ignored
-        _, na_query, _ = self.translate( nl_string )
+            # The target and metadata (1st and 3rd returned value) from quepy are ignored
+            _, na_query, _ = self.translate( nl_string )
 
-        if reg_exp is not None:
-            for n in na_query['query']:
-                try:
-                    if 'name' in n['action']['method']['query']:
-                        n['action']['method']['query']['any()'] = reg_exp
-                        n['action']['method']['query'].pop('name')
-                    break
-                except KeyError:
-                    continue
+            if reg_exp is not None:
+                for n in na_query['query']:
+                    try:
+                        if 'name' in n['action']['method']['query']:
+                            n['action']['method']['query']['any()'] = reg_exp
+                            n['action']['method']['query'].pop('name')
+                        break
+                    except KeyError:
+                        continue
 
-        if na_query:
-            na_query[ 'user' ] = user
-            if format_type:
-                na_query[ 'format' ] = format_type
-            return na_query
-        else:
+            if na_query:
+                na_query[ 'user' ] = user
+                if format_type:
+                    na_query[ 'format' ] = format_type
+                return na_query
+            else:
+                return {}
+        except:
             return {}
 
     def correct_spelling( self, nl_string ):

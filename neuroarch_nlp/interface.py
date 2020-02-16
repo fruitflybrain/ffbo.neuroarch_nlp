@@ -32,6 +32,10 @@ na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'po
 
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )
+special_char = set('*?+\.()[]|{}^$')
+
+def replace_special_char(text):
+    return ''.join(['\\\\'+s if s in special_char else s for s in text])
 
 class PrototypeBaselineTranslator(object):
     def __init__(self):
@@ -56,11 +60,11 @@ class PrototypeBaselineTranslator(object):
             elif '$' in nl_string:
                 exps = nl_string.split('$')
                 nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-                reg_exp = '/r(.*){}(.*)'.format(exps[1])
+                shorthand = replace_special_char(exps[1])
+                reg_exp = '/r(.*){}(.*)'.format(shorthand)
             elif '/[' in nl_string:
                 tmp = nl_string.split('[')
                 exps = [tmp[0]] + tmp[1].split(']')
-                print exps
                 nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
                 reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
             nl_string = nl_string.strip()
@@ -89,7 +93,8 @@ class PrototypeBaselineTranslator(object):
                 return na_query
             else:
                 return {}
-        except:
+        except Exception as e:
+            print(e)
             return {}
 
     def correct_spelling( self, nl_string ):

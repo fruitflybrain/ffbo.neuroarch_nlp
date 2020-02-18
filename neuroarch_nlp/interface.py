@@ -32,7 +32,7 @@ na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'po
 
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )
-special_char = set('*?+\.()[]|{}^$')
+special_char = set("*?+\.()[]|{}^$'")
 
 def replace_special_char(text):
     return ''.join(['\\\\'+s if s in special_char else s for s in text])

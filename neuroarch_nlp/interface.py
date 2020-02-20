@@ -1,6 +1,7 @@
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import re
+import traceback
 
 from quepy_analysis.grammar import modifiers_and_regions, arborization_regions
 from .data import colors_values
@@ -77,14 +78,54 @@ class PrototypeBaselineTranslator(object):
             _, na_query, _ = self.translate( nl_string )
 
             if reg_exp is not None:
-                for n in na_query['query']:
+                queries_with_name = []
+                neuron_class_queries = []
+                state_queries = []
+                memory_queries = []
+                for i, n in enumerate(na_query['query']):
                     try:
-                        if 'name' in n['action']['method']['query']:
-                            n['action']['method']['query']['any()'] = reg_exp
-                            n['action']['method']['query'].pop('name')
-                        break
+                        if 'query' in n['action']['method']:
+                            nn = n['action']['method']['query']
+                        elif 'has' in n['action']['method']:
+                            nn = n['action']['method']['has']
+                        else:
+                            continue
+                        if 'name' in nn:
+                            if 'class' in n['object']:
+                                if n['object']['class'] == 'Neuron':
+                                    neuron_class_queries.append(i)
+                            elif 'state' in n['object']:
+                                state_queries.append(i)
+                            elif 'memory' in n['object']:
+                                memory_queries.append(i)
                     except KeyError:
                         continue
+
+                if len(neuron_class_queries):
+                    n = na_query['query'][neuron_class_queries[0]]['action']['method']
+                    if 'query' in n:
+                        n['query']['any()'] = reg_exp
+                        n['query'].pop('name')
+                    elif 'has' in n:
+                        n['has']['any()'] = reg_exp
+                        n['has'].pop('name')
+                else:
+                    if len(state_queries):
+                        n = na_query['query'][state_queries[0]]['action']['method']
+                        if 'query' in n:
+                            n['query']['any()'] = reg_exp
+                            n['query'].pop('name')
+                        elif 'has' in n:
+                            n['has']['any()'] = reg_exp
+                            n['has'].pop('name')
+                    elif len(memory_queries):
+                        n = na_query['query'][memory_queries[0]]['action']['method']
+                        if 'query' in n:
+                            n['query']['any()'] = reg_exp
+                            n['query'].pop('name')
+                        elif 'has' in n:
+                            n['has']['any()'] = reg_exp
+                            n['has'].pop('name')
 
             if na_query:
                 na_query[ 'user' ] = user
@@ -94,7 +135,7 @@ class PrototypeBaselineTranslator(object):
             else:
                 return {}
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             return {}
 
     def correct_spelling( self, nl_string ):

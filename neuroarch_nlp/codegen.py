@@ -9,7 +9,7 @@ import logging
 logging.basicConfig()
 log = logging.getLogger( 'neuroarch_nlp.codegen' )
 log.setLevel('DEBUG')
-from quepy_analysis.dsl import HasEqualTo, HasVerb, HasColor, HasFormat
+from .quepy_analysis.dsl import HasEqualTo, HasVerb, HasColor, HasFormat
 
 class EfficiencyException( BaseException ):
     pass

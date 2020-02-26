@@ -3,12 +3,12 @@ from fuzzywuzzy import process
 import re
 import traceback
 
-from quepy_analysis.grammar import modifiers_and_regions, arborization_regions
+from .quepy_analysis.grammar import modifiers_and_regions, arborization_regions
 from .data import colors_values
 
 
 na_unigrams = { unigram
-                for term in modifiers_and_regions.keys() + colors_values.keys() + arborization_regions.keys()
+                for term in list(modifiers_and_regions.keys()) + list(colors_values.keys()) + list(arborization_regions.keys())
                 for unigram in term.split() }
 # This is for (the temporary) spelling-correction. It, in part, results in a model that performs
 # spelling correction on words not found in its (current--at time of writing) grammar.
@@ -41,7 +41,7 @@ def replace_special_char(text):
 class PrototypeBaselineTranslator(object):
     def __init__(self):
         import quepy
-        from quepy_analysis import settings
+        from .quepy_analysis import settings
         settings.PARSER = 'spaCy'
         self.translator = quepy.install('neuroarch_nlp.quepy_analysis')
         self.translate = self.translator.get_query

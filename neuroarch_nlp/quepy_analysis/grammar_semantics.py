@@ -63,7 +63,7 @@ def get_name_expression( name, syn_to=None ):
         if subregions[name][2]:
             expr+=HasName(subregions[name][2])
     elif name in arborization_regions:
-        print name, arborization_regions[name]
+        print(name, arborization_regions[name])
         expr = IsBrainRegion()
         expr += HasName(arborization_regions[name])
     else:
@@ -79,7 +79,7 @@ def get_region_owner(wordlist, region_indicator):
     """
     #print "get_region_owner wordlist", wordlist
     #print "get_region_owner region_indicator", region_indicator
-    
+
     # NOTE: This treats ands/ors as binary operators.
     tokenlist = [x.token.lower() for x in wordlist]
     if 'and' in tokenlist:
@@ -174,7 +174,7 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
         def get_subquery(m, matchwords):
             neuron = IsNeuron() + HasClass('Neuron')
             owned_region = None
-            global syn_num 
+            global syn_num
             #print matchwords
             #print m.state
             if 'synapse_num_clause' in m:
@@ -203,7 +203,7 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
                     for o in finditer(Lemmas("at most"), conn_quant_words):
                         syn_num = HasAtMost(conn_num)
                         moreorless = True
-                    
+
                     if not moreorless:
                         syn_num = HasEqualTo(conn_num)
                 #print "syn_num", syn_num

@@ -21,8 +21,8 @@ R = Predicate
 
 # NOTE: You should add other ("non-transmitter") modifiers to this "modifiers" dict, as necessary.
 modifiers = { k: v for k, v in
-              transmitters.items() + neuron_types.items() + localities.items()
-            + synapticities.items() + ownerinstances.items() + othermods.items() }
+              list(transmitters.items()) + list(neuron_types.items()) + list(localities.items())
+            + list(synapticities.items()) + list(ownerinstances.items()) + list(othermods.items()) }
 
 # For the grammar, we format the neuropils as a dict, mapping individual string representations
 # to their corresponding DB representation.
@@ -37,12 +37,12 @@ arborization_regions = { string: db_rep
 
 # "Regions" is used here more generally to apply to neuropils, cartridges, or channels
 regions = { k: v for k, v in
-            neuropils.items() + subregions.items() }
+            list(neuropils.items()) + list(subregions.items()) }
 arbregions = { k: v for k, v in
-            neuropils.items() + arborization_regions.items() }
+            list(neuropils.items()) + list(arborization_regions.items()) }
 
 modifiers_and_regions = { k: v for k, v in
-                          modifiers.items() + regions.items()}
+                          list(modifiers.items()) + list(regions.items())}
 
 notneurons = Plus( R(lambda token: token is not None
                                and token.lemma not in {'neuron', 'interneuron', 'interneurons'}
@@ -143,7 +143,7 @@ in_region_list = Star(L('both')) + brainregion2 + Star(
 clause = expressing_marker | transmitters_clause | connections_clause | is_connecting | synapse_num_clause | synapse_type
 
 clauses = clause + Star(Qu(P(',')) + Qu(L('and') | L('or')) + clause)
-                            
+
 synaptic_phrase = G( Qu( L('presynaptic') | L('postsynaptic') )
                    + Qu( Qu(P(',')|L('and')|L('or'))
                    + (L('presynaptic') | L('postsynaptic')) )
@@ -173,7 +173,7 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
                + Qu(Qu(L('and') | L('or')) \
                     + in_lem + G(in_region_list, 'region_list')) + \
                Qu(clauses)
-                   
+
     subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
 
     regex = subqueries \

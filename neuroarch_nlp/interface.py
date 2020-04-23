@@ -54,6 +54,7 @@ class PrototypeBaselineTranslator(object):
         """
         try:
             reg_exp = None
+            query_field = 'any()'
             if '/r' in nl_string:
                 exps = nl_string.split('/r')
                 nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
@@ -66,6 +67,13 @@ class PrototypeBaselineTranslator(object):
             elif '/[' in nl_string:
                 tmp = nl_string.split('[')
                 exps = [tmp[0]] + tmp[1].split(']')
+                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+                reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
+            elif '/:' in nl_string:
+                tmp = nl_string.split('/:')
+                tmp1 = tmp[1].split(':[')
+                query_field = tmp1[0]
+                exps = [tmp[0]] + tmp1[1].split(']')
                 nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
                 reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
             nl_string = nl_string.strip()
@@ -104,27 +112,27 @@ class PrototypeBaselineTranslator(object):
                 if len(neuron_class_queries):
                     n = na_query['query'][neuron_class_queries[0]]['action']['method']
                     if 'query' in n:
-                        n['query']['any()'] = reg_exp
+                        n['query'][query_field] = reg_exp
                         n['query'].pop('name')
                     elif 'has' in n:
-                        n['has']['any()'] = reg_exp
+                        n['has'][query_field] = reg_exp
                         n['has'].pop('name')
                 else:
                     if len(state_queries):
                         n = na_query['query'][state_queries[0]]['action']['method']
                         if 'query' in n:
-                            n['query']['any()'] = reg_exp
+                            n['query'][query_field] = reg_exp
                             n['query'].pop('name')
                         elif 'has' in n:
-                            n['has']['any()'] = reg_exp
+                            n['has'][query_field] = reg_exp
                             n['has'].pop('name')
                     elif len(memory_queries):
                         n = na_query['query'][memory_queries[0]]['action']['method']
                         if 'query' in n:
-                            n['query']['any()'] = reg_exp
+                            n['query'][query_field] = reg_exp
                             n['query'].pop('name')
                         elif 'has' in n:
-                            n['has']['any()'] = reg_exp
+                            n['has'][query_field] = reg_exp
                             n['has'].pop('name')
 
             if na_query:

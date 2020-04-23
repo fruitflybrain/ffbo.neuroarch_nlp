@@ -281,6 +281,8 @@ arborization_regions = [('M1', ['medulla layer 1', 'm1', 'layer m1']),
 
 # 'subregion query name': (Class, Instance, Name)
 subregions = {
+    'alpha lobe': ('Subregion', '', 'aL(R)'),
+    'alhpa1 compartment': ('Subregion', '', 'a1(R)'),
     'home cartridge': ('Cartridge','','home'),
     'single cartridge': ('Cartridge','','home'),
     'channel': ('Glomerulus','',''),

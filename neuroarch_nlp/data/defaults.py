@@ -843,7 +843,8 @@ neuron_types = {
     'y3_y6': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
     'y3': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
     'fru': '/rfru-F-[0-9]+',
-    'fruitless': '/rfru-F-[0-9]+'
+    'fruitless': '/rfru-F-[0-9]+',
+    'regex': '',
 }
 
 localities = {

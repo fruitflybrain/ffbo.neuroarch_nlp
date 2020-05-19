@@ -66,7 +66,7 @@ class PrototypeBaselineTranslator(object):
         """
         try:
             reg_exp = None
-            query_field = "any('uname', 'name', 'label')"
+            query_field = "any()"
             if '/r' in nl_string:
                 exps = nl_string.split('/r')
                 nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])

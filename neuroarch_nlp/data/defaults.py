@@ -32,12 +32,14 @@ neuropils = [
             ['right subesophageal zone', 'right sez', 'sez_r']),
         ('sez',
             ['left subesophageal zone', 'left sez', 'sez_l']),
-        (['SEZ', 'sez'],['subesophageal zone', 'SEZ', 'sez'])
+        (['SEZ', 'sez'],
+            ['subesophageal zone', 'SEZ', 'sez']),
         ('VNC',
             ['right ventral nerve cord', 'right vnc', 'vnc_r']),
         ('vnc',
             ['left ventral nerve cord', 'left vnc', 'vnc_l']),
-        (['VNC', 'vnc'],['ventral nerve cord', 'VNC', 'vnc'])
+        (['VNC', 'vnc'],
+            ['ventral nerve cord', 'VNC', 'vnc']),
         ('LON',
             ['right larval optic neuropil', 'right lon', 'lon_r']),
         ('lon',

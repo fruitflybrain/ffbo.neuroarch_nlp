@@ -41,8 +41,12 @@ def replace_special_char(text):
     return ''.join(['\\\\'+s if s in special_char else s for s in text])
 
 def convert(data):
+    # TODO: Still in py2
     if isinstance(data, (basestring, str)):
-        return six.u(data)
+        if isinstance(data, unicode):
+            return data
+        else:
+            return six.u(data)
     elif isinstance(data, collections.Mapping):
         return dict(map(convert, data.items()))
     elif isinstance(data, collections.Iterable):

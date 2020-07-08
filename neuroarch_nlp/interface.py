@@ -119,9 +119,11 @@ class PrototypeBaselineTranslator(object):
                                 if n['object']['class'] == 'Neuron':
                                     neuron_class_queries.append(i)
                             elif 'state' in n['object']:
-                                state_queries.append(i)
+                                if len(nn['name']) == 0:
+                                    state_queries.append(i)
                             elif 'memory' in n['object']:
-                                memory_queries.append(i)
+                                if len(nn['name']) == 0:
+                                    memory_queries.append(i)
                     except KeyError:
                         continue
 

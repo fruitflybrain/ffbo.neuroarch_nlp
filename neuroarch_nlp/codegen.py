@@ -672,7 +672,7 @@ def generate_json( sast ):
                         retlist += add_attributes()
                     elif 'name' in params:
                         retlist.append( { 'object': {'class': node['class']}, \
-                            'action': {'method': {'query': {'name':params['name']}}} } )
+                            'action': {'method': {'query': {'uname' if node['class'] == 'Neuron' else 'name':params['name']}}} } )
                         params.pop( 'name' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'Transmitters' in params:

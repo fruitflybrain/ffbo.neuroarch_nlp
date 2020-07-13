@@ -114,15 +114,25 @@ class PrototypeBaselineTranslator(object):
                             nn = n['action']['method']['has']
                         else:
                             continue
-                        if 'name' in nn:
+                        # if 'name' in nn:
+                        #     if 'class' in n['object']:
+                        #         if n['object']['class'] == 'Neuron':
+                        #             neuron_class_queries.append(i)
+                        #     elif 'state' in n['object']:
+                        #         if len(nn['name']) == 0:
+                        #             state_queries.append(i)
+                        #     elif 'memory' in n['object']:
+                        #         if len(nn['name']) == 0:
+                        #             memory_queries.append(i)
+                        if 'uname' in nn:
                             if 'class' in n['object']:
                                 if n['object']['class'] == 'Neuron':
                                     neuron_class_queries.append(i)
                             elif 'state' in n['object']:
-                                if len(nn['name']) == 0:
+                                if len(nn['uname']) == 0:
                                     state_queries.append(i)
                             elif 'memory' in n['object']:
-                                if len(nn['name']) == 0:
+                                if len(nn['uname']) == 0:
                                     memory_queries.append(i)
                     except KeyError:
                         continue
@@ -131,27 +141,27 @@ class PrototypeBaselineTranslator(object):
                     n = na_query['query'][neuron_class_queries[0]]['action']['method']
                     if 'query' in n:
                         n['query'][query_field] = reg_exp
-                        n['query'].pop('name')
+                        n['query'].pop('uname')
                     elif 'has' in n:
                         n['has'][query_field] = reg_exp
-                        n['has'].pop('name')
+                        n['has'].pop('uname')
                 else:
                     if len(state_queries):
                         n = na_query['query'][state_queries[0]]['action']['method']
                         if 'query' in n:
                             n['query'][query_field] = reg_exp
-                            n['query'].pop('name')
+                            n['query'].pop('uname')
                         elif 'has' in n:
                             n['has'][query_field] = reg_exp
-                            n['has'].pop('name')
+                            n['has'].pop('uname')
                     elif len(memory_queries):
                         n = na_query['query'][memory_queries[0]]['action']['method']
                         if 'query' in n:
                             n['query'][query_field] = reg_exp
-                            n['query'].pop('name')
+                            n['query'].pop('uname')
                         elif 'has' in n:
                             n['has'][query_field] = reg_exp
-                            n['has'].pop('name')
+                            n['has'].pop('uname')
 
             if na_query:
                 na_query[ 'user' ] = user

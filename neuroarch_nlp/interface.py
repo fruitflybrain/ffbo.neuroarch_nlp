@@ -42,7 +42,10 @@ def replace_special_char(text):
 
 def convert(data):
     if isinstance(data, (basestring, str)):
-        return six.u(data)
+        if isinstance(data, unicode):
+            return data
+        else:
+            return six.u(data)
     elif isinstance(data, collections.Mapping):
         return dict(map(convert, data.items()))
     elif isinstance(data, collections.Iterable):

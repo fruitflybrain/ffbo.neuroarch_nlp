@@ -62,7 +62,7 @@ class PrototypeBaselineTranslator(object):
         self.na_unigrams = { unigram
                         for term in list(modifiers_and_regions.keys()) + list(colors_values.keys()) + list(arborization_regions.keys())
                         for unigram in term.split() }
-        self.na_unigrams.upate(na_unigrams)
+        self.na_unigrams.update(na_unigrams)
 
         settings.PARSER = 'spaCy'
         self.translator = quepy.install('neuroarch_nlp.{}'.format(app_name)) #quepy.install('neuroarch_nlp.quepy_analysis')

@@ -1,7 +1,7 @@
 from refo import Question, finditer, Predicate
 from quepy.parsing import Lemma, Lemmas, Pos
 import logging
-log = logging.getLogger('neuroarch_nlp.hemibrain.grammar_semantics')
+log = logging.getLogger('neuroarch_nlp.flycircuit.grammar_semantics')
 
 #from .dsl import *
 from .dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, PresynapticTo, PresynapticToState, \
@@ -63,7 +63,7 @@ def get_name_expression( name, syn_to=None ):
         if subregions[name][2]:
             expr+=HasName(subregions[name][2])
     elif name in arborization_regions:
-        print(name, arborization_regions[name])
+        print name, arborization_regions[name]
         expr = IsBrainRegion()
         expr += HasName(arborization_regions[name])
     else:

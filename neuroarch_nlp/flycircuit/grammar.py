@@ -2,7 +2,7 @@ import re
 from refo import Plus, Question, Star, Group, Predicate
 from quepy.parsing import Lemma, Lemmas, Pos, QuestionTemplate
 import logging
-log = logging.getLogger('neuroarch_nlp.hemibrain.grammar')
+log = logging.getLogger('neuroarch_nlp.flycircuit.grammar')
 
 from .defaults import neuropils as raw_neuropils, arborization_regions as raw_arborization_regions, \
     subregions, neuron_types
@@ -23,8 +23,8 @@ R = Predicate
 
 # NOTE: You should add other ("non-transmitter") modifiers to this "modifiers" dict, as necessary.
 modifiers = { k: v for k, v in
-              list(transmitters.items()) + list(neuron_types.items()) + list(localities.items())
-            + list(synapticities.items()) + list(ownerinstances.items()) + list(othermods.items()) }
+              transmitters.items() + neuron_types.items() + localities.items()
+            + synapticities.items() + ownerinstances.items() + othermods.items() }
 
 # For the grammar, we format the neuropils as a dict, mapping individual string representations
 # to their corresponding DB representation.
@@ -39,12 +39,12 @@ arborization_regions = { string: db_rep
 
 # "Regions" is used here more generally to apply to neuropils, cartridges, or channels
 regions = { k: v for k, v in
-            list(neuropils.items()) + list(subregions.items()) }
+            neuropils.items() + subregions.items() }
 arbregions = { k: v for k, v in
-            list(neuropils.items()) + list(arborization_regions.items()) }
+            neuropils.items() + arborization_regions.items() }
 
 modifiers_and_regions = { k: v for k, v in
-                          list(modifiers.items()) + list(regions.items())}
+                          modifiers.items() + regions.items()}
 
 notneurons = Plus( R(lambda token: token is not None
                                and token.lemma not in {'neuron', 'interneuron', 'interneurons'}

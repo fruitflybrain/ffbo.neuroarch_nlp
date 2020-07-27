@@ -4,17 +4,15 @@ import re
 import traceback
 import six
 import collections
+import importlib
+import quepy
 
-from .quepy_analysis.grammar import modifiers_and_regions, arborization_regions
 from .data import colors_values
 
 
-na_unigrams = { unigram
-                for term in list(modifiers_and_regions.keys()) + list(colors_values.keys()) + list(arborization_regions.keys())
-                for unigram in term.split() }
 # This is for (the temporary) spelling-correction. It, in part, results in a model that performs
 # spelling correction on words not found in its (current--at time of writing) grammar.
-na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'post', 'synaptic',
+na_unigrams = {'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'post', 'synaptic',
                      'inside', 'of', 'the', 'a', 'all', 'each', 'every', 'neuron', 'interneuron',
                      'transmitter', 'neurotransmitter', 'graph', 'list', 'visualize',
                      'display', 'add', 'and', 'or', 'remove', 'hide', 'for', 'me', 'express',
@@ -31,7 +29,7 @@ na_unigrams.update([ 'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'po
                      'connections', 'axons', 'dendrites', 'neurons', 'arborizations',
                      'inputs', 'outputs', 'interneurons', 'innervations', 'cells',
                      'than','atleast','least','at','most','atmost','more','less',
-                     'synapse','synapses'])
+                     'synapse','synapses'}
 
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )
@@ -56,10 +54,18 @@ def convert(data):
 
 class PrototypeBaselineTranslator(object):
     def __init__(self, app_name):
-        import quepy
-        from .quepy_analysis import settings
+        settings = importlib.import_module('neuroarch_nlp.{}.settings'.format(app_name))
+        grammar = importlib.import_module('neuroarch_nlp.{}.grammar'.format(app_name))
+        modifiers_and_regions = grammar.modifiers_and_regions
+        arborization_regions = grammar.arborization_regions
+
+        self.na_unigrams = { unigram
+                        for term in list(modifiers_and_regions.keys()) + list(colors_values.keys()) + list(arborization_regions.keys())
+                        for unigram in term.split() }
+        self.na_unigrams.upate(na_unigrams)
+
         settings.PARSER = 'spaCy'
-        self.translator = quepy.install(app_name) #quepy.install('neuroarch_nlp.quepy_analysis')
+        self.translator = quepy.install('neuroarch_nlp.{}'.format(app_name)) #quepy.install('neuroarch_nlp.quepy_analysis')
         self.translate = self.translator.get_query
 
     def nlp_query( self, nl_string, user='test', format_type=None, spell_correct=True ):
@@ -190,7 +196,7 @@ class PrototypeBaselineTranslator(object):
                 corr_words.append( word )
             else:
                 # NOTE: score_cutoff is a parameter that could be tweaked.
-                corr_word = process.extractOne( word.lower(), na_unigrams, scorer=fuzz.ratio, score_cutoff=80 )
+                corr_word = process.extractOne( word.lower(), self.na_unigrams, scorer=fuzz.ratio, score_cutoff=80 )
                 if corr_word:
                     corr_words.append( corr_word[0] )  # [0] is the word, [1] is its score
                 # NOTE: Original implementation dropped words that are not in our "dictionary"

@@ -55,11 +55,11 @@ def convert(data):
         return data
 
 class PrototypeBaselineTranslator(object):
-    def __init__(self):
+    def __init__(self, app_name):
         import quepy
         from .quepy_analysis import settings
         settings.PARSER = 'spaCy'
-        self.translator = quepy.install('neuroarch_nlp.quepy_analysis')
+        self.translator = quepy.install(app_name) #quepy.install('neuroarch_nlp.quepy_analysis')
         self.translate = self.translator.get_query
 
     def nlp_query( self, nl_string, user='test', format_type=None, spell_correct=True ):

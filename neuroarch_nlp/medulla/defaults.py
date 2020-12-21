@@ -145,7 +145,7 @@ neuron_types = {
     't4d': '/rT4d_?[a-z]*_?(_X)?[0-9]?',
     't4': '/rT4[abcd]_?[a-z]*_?(_X)?[0-9]?',
     'mi': ['Mi1', 'Mi3', 'Mi5', 'Mi6', 'Mi7', 'Mi8', 'Mi9', 'Mi10_like'],
-    'mi1': 'Mi1', 'mi3': 'Mi3', 'mi5': 'Mi5',
+    'mi1': '/rMi1-(.*)/r', 'mi3': 'Mi3', 'mi5': 'Mi5',
     'mi6': 'Mi6', 'mi7': 'Mi7', 'mi8': 'Mi8', 'mi9': 'Mi9',
     'mi10_like': 'Mi10_like',
     'mi10': 'Mi10_like',

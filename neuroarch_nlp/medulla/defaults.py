@@ -6,7 +6,7 @@ neuropils = [
             ['left medulla', 'left med', 'left me', 'med_l', 'me_l']),
         ]
 
-arborization_regions = [('MED(L)', ['left medulla', 'left med', 'left me', 'med_l', 'me_l'])
+arborization_regions = [('MED(L)', ['left medulla', 'left med', 'left me', 'med_l', 'me_l']),
                         ('MED-M1(L)', ['medulla stratum 1', 'm1', 'stratum m1']),
                         ('MED-M2(L)', ['medulla stratum 2', 'm2', 'stratum m2']),
                         ('MED-M3(L)', ['medulla stratum 3', 'm3', 'stratum m3']),

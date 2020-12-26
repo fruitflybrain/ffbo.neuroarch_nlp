@@ -590,7 +590,7 @@ def generate_json( sast ):
                                                          'min_depth': 1}} } } )
                     retlist += add_attributes()
                 elif 'arbors' in node:
-                    retlist.append( { 'object': {'class': ['Neuropil', 'Subregin']},
+                    retlist.append( { 'object': {'class': ['Neuropil', 'Subregion']},
                                       'action': {'method': {'query': {'name': node['arbors']}}} } )
                     retlist.append( { 'object': {'memory': 0},
                         'action': {'method': {'gen_traversal_in': \

@@ -85,7 +85,7 @@ adjnouns = Plus(adjnoun)
 # (which could, e.g., be incorporated with Predicate)
 action_keywords = {'show', 'list', 'graph', 'visualize', 'display', 'add',
                    'remove', 'hide', 'keep', 'retain', 'pin', 'unpin', 'unhide',
-                   'color', 'uncolor', 'animate', 'unanimate', 'blink', 'unblink'}
+                   'color', 'uncolor', 'varcolor', 'animate', 'unanimate', 'blink', 'unblink'}
 
 # TODO: Consider using a similarity/distance metric (which could, e.g., be incorporated with Predicate)
 action_keyword = R( lambda token: token is not None and token.lemma in action_keywords )
@@ -179,7 +179,7 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
     subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
 
     regex = subqueries \
-            + Qu(G(color, 'color')) \
+            + Qu(G(color, 'color') | G(color, 'varcolor')) \
             + Qu(L('as') + Qu(L('a')) + G(noun, 'formatting')) \
             + Qu(P('.'))
 
@@ -265,7 +265,7 @@ class ColorCommand(QuestionTemplate):
     """
         e.g. Color, Color [color]
     """
-    regex = L('color') + Qu( G( R(is_color), 'color' ) ) + Qu(P('.'))
+    regex = (L('color')|L('varcolor')) + Qu( G( R(is_color), 'color' ) ) + Qu(P('.'))
 
     def interpret( self, match ):
         return interpret_ColorCommand( self, match )

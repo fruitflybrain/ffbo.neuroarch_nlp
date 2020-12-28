@@ -24,7 +24,7 @@ na_unigrams = {'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'post', '
                      'undo', 'clear', 'restart', 'arborizing', 'previous', 'last', 'not',
                      'channel', 'expressing', 'process', 'processes', 'transmitting',
                      'cart', 'retina', 'innervate', 'innervating', 'innervation', 'cell',
-                     'from', 'keep', 'retain', 'color', 'uncolor', 'pin', 'unpin', 'blink',
+                     'from', 'keep', 'retain', 'color', 'uncolor', 'varcolor', 'pin', 'unpin', 'blink',
                      'unblink', 'animate', 'unanimate', 'unhide',
                      'connections', 'axons', 'dendrites', 'neurons', 'arborizations',
                      'inputs', 'outputs', 'interneurons', 'innervations', 'cells',
@@ -34,6 +34,7 @@ na_unigrams = {'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'post', '
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )
 special_char = set("*?+\.()[]|{}^$'")
+closing = {'$': '$', '/r': '/r', '/[': ']', '/:': ']'}
 
 def replace_special_char(text):
     return ''.join(['\\\\'+s if s in special_char else s for s in text])
@@ -75,30 +76,76 @@ class PrototypeBaselineTranslator(object):
             then that setting will be considered "disambiguating" and will be used.
         """
         try:
-            reg_exp = None
-            query_field = 'any()'
-            if '/r' in nl_string:
-                exps = nl_string.split('/r')
-                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-                reg_exp = '/r{}'.format(exps[1])
-            elif '$' in nl_string:
-                exps = nl_string.split('$')
-                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-                shorthand = replace_special_char(exps[1])
-                reg_exp = '/r(.*){}(.*)'.format(shorthand)
-            elif '/[' in nl_string:
-                tmp = nl_string.split('[')
-                exps = [tmp[0]] + tmp[1].split(']')
-                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-                reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
-            elif '/:' in nl_string:
-                tmp = nl_string.split('/:')
-                tmp1 = tmp[1].split(':[')
-                query_field = tmp1[0]
-                exps = [tmp[0]] + tmp1[1].split(']')
-                nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
-                reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
-            nl_string = nl_string.strip()
+            # reg_exp = None
+            # query_field = 'any()'
+            # if '/r' in nl_string:
+            #     exps = nl_string.split('/r')
+            #     nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            #     reg_exp = '/r{}'.format(exps[1])
+            # elif '$' in nl_string:
+            #     exps = nl_string.split('$')
+            #     nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            #     shorthand = replace_special_char(exps[1])
+            #     reg_exp = '/r(.*){}(.*)'.format(shorthand)
+            # elif '/[' in nl_string:
+            #     tmp = nl_string.split('[')
+            #     exps = [tmp[0]] + tmp[1].split(']')
+            #     nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            #     reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
+            # elif '/:' in nl_string:
+            #     tmp = nl_string.split('/:')
+            #     tmp1 = tmp[1].split(':[')
+            #     query_field = tmp1[0]
+            #     exps = [tmp[0]] + tmp1[1].split(']')
+            #     nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
+            #     reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
+            # nl_string = nl_string.strip()
+            a = nl_string
+            signs = [(i, a[i] if a[i] in ['$',']'] else a[i:i+2]) \
+                     for i in range(len(a)) if a[i] == '$' or \
+                                               a[i:].startswith('/r') or \
+                                               a[i:].startswith('/[') or \
+                                               a[i:].startswith('/:') or \
+                                               a[i] == ']']
+            current = None
+            new_exp = ''
+            last = -1
+            count = 0
+            reg_dict = {}
+            for k, (i, sign) in enumerate(signs):
+                if current is None:
+                    current = sign
+                    new_exp += a[last+1:i]
+                    last = i
+                    continue
+                else:
+                    if sign == closing[current]:
+                        new_exp += ' regex{} '.format(count)
+                        reg_dict['regex{}'.format(count)] = {}
+                        if current == '/:':
+                            s = a[last:i+1]
+                            reg_dict['regex{}'.format(count)]['query_field'] = s[2:].split(':')[0]
+                            reg_dict['regex{}'.format(count)]['reg_exp'] = \
+                                ["{}".format(ss.strip()) for ss in s[2:].split(':[')[1][:-1].split(',')]
+                            last = i
+                        else:
+                            s = a[last:i+1]
+                            reg_dict['regex{}'.format(count)]['query_field'] = 'any()'
+                            if current == '/r':
+                                reg_dict['regex{}'.format(count)]['reg_exp'] = '/r{}'.format(s[2:-1])
+                                last = i+1
+                            elif current == '$':
+                                reg_dict['regex{}'.format(count)]['reg_exp'] = '/r(.*){}(.*)'.format(s[1:-1])
+                                last = i
+                            elif current == '/[':
+                                reg_dict['regex{}'.format(count)]['reg_exp'] = ["{}".format(i.strip()) for i in s[2:-1].split(',')]
+                                last = i
+                        count += 1
+                    else:
+                        continue
+                    current = None
+            new_exp += a[last+1:]
+            nl_string = new_exp
             if spell_correct:
                 nl_string = self.correct_spelling( nl_string )
                 if nl_string == '':
@@ -107,11 +154,7 @@ class PrototypeBaselineTranslator(object):
             # The target and metadata (1st and 3rd returned value) from quepy are ignored
             _, na_query, _ = self.translate( nl_string )
 
-            if reg_exp is not None:
-                queries_with_name = []
-                neuron_class_queries = []
-                state_queries = []
-                memory_queries = []
+            if count > 0:
                 for i, n in enumerate(na_query['query']):
                     try:
                         if 'query' in n['action']['method']:
@@ -120,55 +163,12 @@ class PrototypeBaselineTranslator(object):
                             nn = n['action']['method']['has']
                         else:
                             continue
-                        # if 'name' in nn:
-                        #     if 'class' in n['object']:
-                        #         if n['object']['class'] == 'Neuron':
-                        #             neuron_class_queries.append(i)
-                        #     elif 'state' in n['object']:
-                        #         if len(nn['name']) == 0:
-                        #             state_queries.append(i)
-                        #     elif 'memory' in n['object']:
-                        #         if len(nn['name']) == 0:
-                        #             memory_queries.append(i)
                         if 'uname' in nn:
-                            if 'class' in n['object']:
-                                if n['object']['class'] == 'Neuron':
-                                    neuron_class_queries.append(i)
-                            elif 'state' in n['object']:
-                                if len(nn['uname']) == 0:
-                                    state_queries.append(i)
-                            elif 'memory' in n['object']:
-                                if len(nn['uname']) == 0:
-                                    memory_queries.append(i)
+                            if nn['uname'].startswith('regex'):
+                                regex_number = nn.pop('uname')
+                                nn[reg_dict[regex_number]['query_field']] = reg_dict[regex_number]['reg_exp']
                     except KeyError:
                         continue
-
-                if len(neuron_class_queries):
-                    n = na_query['query'][neuron_class_queries[0]]['action']['method']
-                    if 'query' in n:
-                        n['query'][query_field] = reg_exp
-                        n['query'].pop('uname')
-                    elif 'has' in n:
-                        n['has'][query_field] = reg_exp
-                        n['has'].pop('uname')
-                else:
-                    if len(state_queries):
-                        n = na_query['query'][state_queries[0]]['action']['method']
-                        if 'query' in n:
-                            n['query'][query_field] = reg_exp
-                            n['query'].pop('uname')
-                        elif 'has' in n:
-                            n['has'][query_field] = reg_exp
-                            n['has'].pop('uname')
-                    elif len(memory_queries):
-                        n = na_query['query'][memory_queries[0]]['action']['method']
-                        if 'query' in n:
-                            n['query'][query_field] = reg_exp
-                            n['query'].pop('uname')
-                        elif 'has' in n:
-                            n['has'][query_field] = reg_exp
-                            n['has'].pop('uname')
-
             if na_query:
                 na_query[ 'user' ] = user
                 if format_type:

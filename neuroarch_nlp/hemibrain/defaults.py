@@ -1063,7 +1063,6 @@ neuron_types = {
     'mc': '/rMC(.*)',
     'lt': '/rLT(.*)',
     'lobula_tangential': '/rLT(.*)',
-    'regex': '',
 }
 
 neuron_types.update({
@@ -1124,3 +1123,5 @@ neuron_types.update({
 neuron_types.update({
     'lt{}'.format(i): '/rLT{}[^0-9](.*)'.format(i) for i in range(1,60)
 })
+
+neuron_types.update({'regex{}'.format(i): 'regex{}'.format(i) for i in range(100)})

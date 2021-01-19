@@ -1063,6 +1063,8 @@ neuron_types = {
     'mc': '/rMC(.*)',
     'lt': '/rLT(.*)',
     'lobula_tangential': '/rLT(.*)',
+    'lptc': '/rLPTC(.*)',
+    'gln': '/rGLN(.*)',
 }
 
 neuron_types.update({

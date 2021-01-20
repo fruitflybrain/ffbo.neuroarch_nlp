@@ -480,6 +480,7 @@ neuron_types = {
     'y3': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
     'fru': '/rfru-F-[0-9]+',
     'fruitless': '/rfru-F-[0-9]+',
+    'all': '/r(.*)',
 }
 
 neuron_types.update({'regex{}'.format(i): 'regex{}'.format(i) for i in range(100)})

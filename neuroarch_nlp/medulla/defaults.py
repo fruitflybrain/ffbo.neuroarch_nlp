@@ -105,152 +105,38 @@ subregions = {
     'column 3z': ('','Circuit','3Z'),
 }
 
-neuron_types = {
-    'r1': 'R1', 'r2': 'R2', 'r3': 'R3', 'r4': 'R4', 'r5': 'R5', 'r6': 'R6',
-    'r7': 'R7', 'r8': 'R8',
-    'photoreceptors': ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'],
-    'lamina wide field': ['Lawf1_0','Lawf1_1','Lawf1_2','Lawf2_0','Lawf2_1'],
-    'lamina monopolar': ['L1', 'L2', 'L3', 'L4', 'L5'],
-    'l1': 'L1', 'l2': 'L2', 'l3': 'L3', 'l4': 'L4', 'l5': 'L5',
-    'lawf1_0': 'Lawf1_0',
-    'lawf1_1': 'Lawf1_1',
-    'lawf1_2': 'Lawf1_2',
-    'lawf2_0': 'Lawf2_0',
-    'lawf2_1': 'Lawf2_1',
-    'lawf1': ['Lawf1_0','Lawf1_1','Lawf1_2'],
-    'lawf2': ['Lawf2_0','Lawf2_1'],
-    'lawf': ['Lawf1_0','Lawf1_1','Lawf1_2','Lawf2_0','Lawf2_1'],
-    'c2': 'C2', 'c3': 'C3',
-    't1': 'T1',
-    't2a': 'T2a',
-    't2_d_2nd': 'T2_D_2nd',
-    't2': ['T2','T2a','T2_D_2nd'],
-    't3_out': 'T3_out',
-    't3': ['T3','T3_out'],
-    't4a_fb_x1': 'T4a_fb_X1',
-    't4a_fb_x2': 'T4a_fb_X2',
-    't4a_fb': ['T4a_fb','T4a_fb_X1','T4a_fb_X2'],
-    't4b_bf_x1': 'T4b_bf_X1',
-    't4b_bf_x2': 'T4b_bf_X2',
-    't4b_bf': ['T4b_bf','T4b_bf_X1','T4b_bf_X2'],
-    't4c_du_x1': 'T4c_du_X1',
-    't4c_du_x2': 'T4c_du_X2',
-    't4c_du': ['T4c_du','T4c_du_X1','T4c_du_X2'],
-    't4d_ud_x1': 'T4d_ud_X1',
-    't4d_ud_x2': 'T4d_ud_X2',
-    't4d_ud': ['T4d_ud','T4d_ud_X1','T4d_ud_X2'],
-    't4a': '/rT4a_?[a-z]*_?(_X)?[0-9]?',
-    't4b': '/rT4b_?[a-z]*_?(_X)?[0-9]?',
-    't4c': '/rT4c_?[a-z]*_?(_X)?[0-9]?',
-    't4d': '/rT4d_?[a-z]*_?(_X)?[0-9]?',
-    't4': '/rT4[abcd]_?[a-z]*_?(_X)?[0-9]?',
-    'mi': ['Mi1', 'Mi3', 'Mi5', 'Mi6', 'Mi7', 'Mi8', 'Mi9', 'Mi10_like'],
-    'mi1': '/rMi1-(.*)/r', 'mi3': 'Mi3', 'mi5': 'Mi5',
-    'mi6': 'Mi6', 'mi7': 'Mi7', 'mi8': 'Mi8', 'mi9': 'Mi9',
-    'mi10_like': 'Mi10_like',
-    'mi10': 'Mi10_like',
-    'mi2_0': 'Mi2_0',
-    'mi2_1': 'Mi2_1',
-    'mi2_2': 'Mi2_2',
-    'mi2': ['Mi2_0','Mi2_1','Mi2_2'],
-    'mi4': 'Mi4',
-    'lt7': 'Lt7',
-    'dm': '/rDm[0-9]?[xy]?_?[0-9]*(_B_home)?',
-    'dm1': '/rDm1_?[0-9]*',
-    'dm2': '/rDm2_?[0-9]*',
-    'dm3': '/rDm3[xy]?_?[0-9]*',
-    'dm4': '/rDm4_?[0-9]*',
-    'dm5': '/rDm5_?(like)?_?[0-9]*',
-    'dm6': '/rDm6_?[0-9]*',
-    'dm7': '/rDm7_?[0-9]*',
-    'dm8': '/rDm8(_B_home)?',
-    'dm9': '/rDm9_?[0-9]*',
-    #'pm1_0': 'Pm1_0',
-    #'pm1_1': 'Pm1_1',
-    #'pm1_2': 'Pm1_2',
-    'pm': '/rPm[0-9]?_?[0-9]*',
-    'pm1': '/rPm1_?[0-9]*',
-    'pm2': '/rPm2_?[0-9]*',
-    'pm3': '/rPm3_?[0-9]*',
-    'pm4': '/rPm4_?[0-9]*',
-    'pm5': '/rPm5_?[0-9]*',
-    'pm6': '/rPm6_?[0-9]*',
-    'tm1': 'Tm1', 'tm2': 'Tm2',
-    'tm3_ant': 'Tm3a',
-    'tm3_post': 'Tm3p',
-    'tm3a': 'Tm3a',
-    'tm3p': 'Tm3p',
-    #'tm3': ['Tm3_ant','Tm3_post'],
-    'tm4_ant': 'Tm4_ant',
-    'tm4_post': 'Tm4_post',
-    'tm4': '/rTm4_?(ant)?(post)?',
-    'tm3': '/rTm3[ap]?_?(ant)?(post)?',
-    'tm5a': 'Tm5a',
-    'tm5b': 'Tm5b',
-    'tm5c': '/rTm5c_?[0-9]*(like)?',
-    'tm5c_0': 'Tm5c_0',
-    'tm5c_1': 'Tm5c_1',
-    'tm5c_2': 'Tm5c_2',
-    'tm5c_3': 'Tm5c_3',
-    'tm5c_like': 'Tm5c_like',
-    'tm5': ['Tm5a','Tm5b','Tm5c'],
-    'tm6_14': 'Tm6_14',
-    'tm6': 'Tm6_14',
-    'tm7': 'Tm7',
-    'tm8_like': 'Tm8_like',
-    'tm8': 'Tm8_like',
-    'tm9': 'Tm9', 'tm10': 'Tm10',
-    'tm11': 'Tm11', 'tm12': 'Tm12', 'tm13': 'Tm13', 'tm14': 'Tm14', 'tm15': 'Tm15',
-    'tm16_like_0': 'Tm16_like_0',
-    'tm16_like_1': 'Tm16_like_1',
-    'tm16_like_2': 'Tm16_like_2',
-    'tm16_like_3': 'Tm16_like_3',
-    'tm16_like': ['Tm16_like_0','Tm16_like_1','Tm16_like_2','Tm16_like_3'],
-    'tm16': ['Tm16_like_0','Tm16_like_1','Tm16_like_2','Tm16_like_3'],
-    'tm17': 'Tm17', 'tm18': 'Tm18', 'tm19': 'Tm19', 'tm20': 'Tm20',
-    'tm21': 'Tm21',
-    'tm22_like': 'Tm22_like',
-    'tm22': 'Tm22_like',
-    'tm23': 'Tm23', 'tm24': 'Tm24',
-    'tm25_y1': 'Tm25_Y1',
-    'tm25': 'Tm25_Y1',
-    'tm26': 'Tm26',
-    'tm28_tmy9_0': 'Tm28_TmY9_0',
-    'tm28_tmy9_1': 'Tm28_TmY9_1',
-    'tm28_tmy9_2': 'Tm28_TmY9_2',
-    'tm28_tmy9_3': 'Tm28_TmY9_3',
-    'tm28_tmy9_4': 'Tm28_TmY9_4',
-    'tm28_tmy9': ['Tm28_TmY9_0','Tm28_TmY9_1','Tm28_TmY9_2','Tm28_TmY9_3','Tm28_TmY9_4'],
-    'tm28': ['Tm28_TmY9_0','Tm28_TmY9_1','Tm28_TmY9_2','Tm28_TmY9_3','Tm28_TmY9_4'],
-    'tmy1': 'TmY1',  'tmy2': 'TmY2', 'tmy3': 'TmY3',
-    'tmy4_like_0': 'TmY4_like_0',
-    'tmy4_like_1': 'TmY4_like_1',
-    'tmy4_like_2': 'TmY4_like_2',
-    'tmy4_like_3': 'TmY4_like_3',
-    'tmy4_like_4': 'TmY4_like_4',
-    'tmy4_like': ['TmY4_like_0','TmY4_like_1','TmY4_like_2','TmY4_like_3','TmY4_like_4'],
-    'tmy4': ['TmY4_like_0','TmY4_like_1','TmY4_like_2','TmY4_like_3','TmY4_like_4'],
-    'tmy5a_0': 'TmY5a_0',
-    'tmy5a': ['TmY5a','TmY5a_0'],
-    'tmy5': ['TmY5a','TmY5a_0'],
-    'tmy6': 'TmY6',  'tmy7': 'TmY7', 'tmy8': 'TmY8', 'tmy9': 'TmY9',
-    'tmy10_like_0': 'TmY10_like_0',
-    'tmy10_like_1': 'TmY10_like_1',
-    'tmy10_like': ['TmY10_like_0','TmY10_like_1'],
-    'tmy10': ['TmY10_like_0','TmY10_like_1'],
-    'tmy11': 'TmY11', 'tmy12': 'TmY12',
-    'tmy13_like_0': 'TmY13_like_0',
-    'tmy13_like_1': 'TmY13_like_1',
-    'tmy13_like': ['TmY13_like_0','TmY13_like_1'],
-    'tmy13': ['TmY13_like_0','TmY13_like_1'],
-    'y3_y6_0': 'Y3_Y6_0',
-    'y3_y6_1': 'Y3_Y6_1',
-    'y3_y6_2': 'Y3_Y6_2',
-    'y3_y6_3': 'Y3_Y6_3',
-    'y3_y6_4': 'Y3_Y6_4',
-    'y3_y6_5': 'Y3_Y6_5',
-    'y3_y6': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
-    'y3': ['Y3_Y6_0','Y3_Y6_1','Y3_Y6_2','Y3_Y6_3','Y3_Y6_4','Y3_Y6_5'],
-}
-
+neuron_types = {}
+neuron_types.update({'r{}'.format(i): '/rR{}(.*)'.format(i) for i in range(1,9)})
+neuron_types.update({'l{}'.format(i): '/rL{}(.*)'.format(i) for i in range(1,5)})
+neuron_types['photoreceptors'] = '/rR[1-9](.*)'
+neuron_types['lamina_monopolar'] = '/rL[1-5](.*)'
+neuron_types.update({'lawf{}'.format(i): '/rLawf{}(.*)'.format(i) for i in range(1,3)})
+neuron_types['lamina_wide_field'] = '/rLawf[1-2](.*)'
+neuron_types['lawf'] = '/rLawf[1-2](.*)'
+neuron_types.update({'c{}'.format(i): '/rC{}(.*)'.format(i) for i in range(2,4)})
+neuron_types.update({'t{}'.format(i): '/rT{}(.*)'.format(i) for i in range(1,5)})
+neuron_types['t2a'] = '/rT2a(.*)'
+neuron_types.update({'t4{}'.format(i): '/rT4{}(.*)'.format(i) for i in ['a', 'b', 'c', 'd']})
+neuron_types.update({'mi{}'.format(i): '/rMi{}-(.*)'.format(i) for i in range(1,20)})
+neuron_types.update({'dm{}'.format(i): '/rDm{}-(.*)'.format(i) for i in range(1,30)})
+neuron_types.update({'pm{}'.format(i): '/rPm{}-(.*)'.format(i) for i in range(1,30)})
+neuron_types.update({'tm{}'.format(i): '/rTm{}-(.*)'.format(i) for i in range(1,40)})
+neuron_types['tm5'] = '/rTm5[abc]-(.*)'
+neuron_types['tm5a'] = '/rTm5a-(.*)'
+neuron_types['tm5b'] = '/rTm5a-(.*)'
+neuron_types['tm5c'] = '/rTm5a-(.*)'
+neuron_types['tm3 ant'] = '/rTm3-(.*)-ant'
+neuron_types['tm3 post'] = '/rTm3-(.*)-post'
+neuron_types['tm3a'] = '/rTm3-(.*)-ant'
+neuron_types['tm3p'] = '/rTm3-(.*)-post'
+neuron_types['tm4 ant'] = '/rTm4-(.*)-ant'
+neuron_types['tm4 post'] = '/rTm4-(.*)-post'
+neuron_types['tm4a'] = '/rTm4-(.*)-ant'
+neuron_types['tm4p'] = '/rTm4-(.*)-post'
+neuron_types.update({'tmy{}'.format(i): '/rTmY{}-(.*)'.format(i) for i in range(1,30)})
+neuron_types['y3'] = '/rY3_Y6(.*)'
+neuron_types['y6'] = '/rY3_Y6(.*)'
+neuron_types['tangential'] = '/rtan-(.*)'
+neuron_types['mt'] = '/rMt(.*)'
+neuron_types['all'] = '/r(.*)'
 neuron_types.update({'regex{}'.format(i): 'regex{}'.format(i) for i in range(100)})

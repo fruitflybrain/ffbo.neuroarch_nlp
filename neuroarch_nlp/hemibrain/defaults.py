@@ -1044,7 +1044,6 @@ neuron_types = {
     'mbon': '/r(.*)MBON(.*)',
     'mushroom_body_output_neurons': '/r(.*)MBON(.*)',
     'apl': '/r(.*)APL(.*)R_1',
-    'mbons':'MBON',
     'apls': '/r(.*)APL(.*)',
     'dan': '/r(PPL|PAM)(.*)',
     'ppl_dan': '/rPPL(.*)',

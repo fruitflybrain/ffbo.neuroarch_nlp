@@ -295,7 +295,7 @@ def generate_json( sast ):
                     log.warning( "Region has no '(node_)class or instance'!" )
                 if 'name' in node: # TODO: This is identical to below. Remove redundancy.
                     outdict = { 'object': {'memory': 0}, 'action': \
-                                    {'method': {'has': {'name': node['name']}} } }
+                                    {'method': {'has': {'uname': node['name']}} } }
                     retlist.append( outdict )
             elif ntype == 'neuron':
                 if 'region' in node:
@@ -345,7 +345,7 @@ def generate_json( sast ):
                 #       This means our analysis must generate the SAST without duplication.
                 if 'name' in node:
                     retlist.append( { 'object': {'memory': 0}, 'action':
-                        {'method': {'has': {'name': node['name']}} } } )
+                        {'method': {'has': {'uname': node['name']}} } } )
                 if 'Transmitters' in node:
                     retlist.append( { 'object': {'memory': 0}, 'action':
                         {'method': {'has': {'Transmitters': [ node['Transmitters'] ]}} } } )

@@ -2,11 +2,14 @@
 #       The basic spelling correction, with its current parameters,
 #       should accept most of these alternate valid spellings.
 neuropils = [
+        (['MED(R)', 'MED(L)'],
+            ['medulla', 'med', 'me']),
         ('MED(L)',
-            ['left medulla', 'left med', 'left me', 'med_l', 'me_l']),
+            ['left medulla', 'left med', 'left me', 'med_l', 'me_l', 'medulla']),
         ]
 
 arborization_regions = [('MED(L)', ['left medulla', 'left med', 'left me', 'med_l', 'me_l']),
+                        (['MED(R)', 'MED(L)'], ['medulla', 'med', 'me']),
                         ('MED-M1(L)', ['medulla stratum 1', 'm1', 'stratum m1']),
                         ('MED-M2(L)', ['medulla stratum 2', 'm2', 'stratum m2']),
                         ('MED-M3(L)', ['medulla stratum 3', 'm3', 'stratum m3']),

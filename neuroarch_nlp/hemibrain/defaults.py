@@ -1080,7 +1080,7 @@ neuron_types.update({
     'pam{}'.format(str(i).zfill(2)): '/rPAM{}[^0-9](.*)'.format(str(i).zfill(2)) for i in range(1, 41)
 })
 neuron_types.update({
-    'ppl{}'.format(str(i).zfill(2)): '/rPPL{}[^0-9](.*)'.format(str(i).zfill(2)) for i in range(1, 41)
+    'ppl{}'.format(str(i).zfill(3)): '/rPPL{}[^0-9](.*)'.format(str(i).zfill(2)) for i in range(1, 205)
 })
 neuron_types.update({
     'tubu{}'.format(str(i).zfill(2)): '/rTuBu{}[^0-9](.*)'.format(str(i).zfill(2)) for i in range(1, 11)

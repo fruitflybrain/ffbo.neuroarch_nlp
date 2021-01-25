@@ -110,7 +110,7 @@ subregions = {
 
 neuron_types = {}
 neuron_types.update({'r{}'.format(i): '/rR{}(.*)'.format(i) for i in range(1,9)})
-neuron_types.update({'l{}'.format(i): '/rL{}(.*)'.format(i) for i in range(1,5)})
+neuron_types.update({'l{}'.format(i): '/rL{}(.*)'.format(i) for i in range(1,6)})
 neuron_types['photoreceptors'] = '/rR[1-9](.*)'
 neuron_types['lamina_monopolar'] = '/rL[1-5](.*)'
 neuron_types.update({'lawf{}'.format(i): '/rLawf{}(.*)'.format(i) for i in range(1,3)})

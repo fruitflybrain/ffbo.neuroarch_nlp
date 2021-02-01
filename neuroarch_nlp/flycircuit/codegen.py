@@ -331,10 +331,30 @@ def generate_json( sast ):
                     #     {'method': {'traverse_owns': {'cls': node['class']} } } }
 
                     # SHOW NEURONS IN [NEUROPIL] ends here
-                    outdict = { 'object': {'memory': 0},
-                        'action': {'method': {'gen_traversal_in': \
-                              {"pass_through": ["ArborizesIn", node['class']],\
-                               "min_depth": 1}}}}
+                    locality = False
+                    if 'locality' in node:
+                        locality = True
+                    else:
+                        parts = []
+                        if 'has' in node and node['has'] > 0:
+                            for n in range(node_id + 1, max(list(node_edge_val.keys()))):
+                                peek_node = node_edge_val[n]
+                                if 'part' in peek_node:
+                                    parts = peek_node['part']
+                                    break
+                        for part in parts:
+                            peek_node = node_edge_val[part]
+                            if peek_node.get('key', None) == 'locality':
+                                if peek_node['value'] == 'True':
+                                    locality = True
+                    if locality:
+                        outdict = { 'object': {'memory': 0},
+                            'action': {'method': {'owns': {'cls': node['class']}}}}
+                    else:
+                        outdict = { 'object': {'memory': 0},
+                            'action': {'method': {'gen_traversal_in': \
+                                  {"pass_through": ["ArborizesIn", node['class']],\
+                                   "min_depth": 1}}}}
 
                     retlist.append( outdict )
                 else:
@@ -349,9 +369,9 @@ def generate_json( sast ):
                 if 'Transmitters' in node:
                     retlist.append( { 'object': {'memory': 0}, 'action':
                         {'method': {'has': {'Transmitters': [ node['Transmitters'] ]}} } } )
-                if 'locality' in node:
-                    retlist.append( {'object': {'memory': 0}, 'action':
-                        {'method': {'has': {'locality': node['locality']}} } } )
+                # if 'locality' in node:
+                #     retlist.append( {'object': {'memory': 0}, 'action':
+                #         {'method': {'has': {'locality': node['locality']}} } } )
                 if 'ownerInstance' in node:
                     retlist.append( { 'object': {'class': 'Neuropil'},
                         'action': {'method': {'query': {}}} } )
@@ -378,6 +398,9 @@ def generate_json( sast ):
                     elif node['key'] == 'Transmitters':
                         # NeuroArch expects Transmitters as a list
                         params[ 'Transmitters' ] = [ node['value'] ]
+                    elif node['key'] == 'locality':
+                        # Taken care of by the in neuronpil query
+                        pass
                     else:
                         if node['value'] == 'True':
                             params[ node['key'] ] = True
@@ -655,10 +678,16 @@ def generate_json( sast ):
                         # retlist.append( { 'object': {'memory': 0},
                         #                   'action': {'method': {'traverse_owns': {'cls': node['class']}} } } )
                         # SHOW NEUROPIL ENDS HERE
-                        retlist.append( { 'object': {'memory': 0},
-                            'action': {'method': {'gen_traversal_in': \
-                                  {"min_depth": 1, \
-                                   "pass_through": ["ArborizesIn", node['class']]} } }})
+                        if 'locality' in params:
+                            retlist.append( { 'object': {'memory': 0},
+                                'action': {'method': {'owns': \
+                                      {"cls": node['class']]} } }})
+                            params.pop('locality')
+                        else:
+                            retlist.append( { 'object': {'memory': 0},
+                                'action': {'method': {'gen_traversal_in': \
+                                      {"min_depth": 1, \
+                                       "pass_through": ["ArborizesIn", node['class']]} } }})
                         params.pop( 'region' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'ownerInstance' in params:
@@ -685,10 +714,11 @@ def generate_json( sast ):
                         params.pop( 'Transmitters' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'locality' in params:
-                        retlist.append( { 'object': {'class': node['class']}, \
-                            'action': {'method': {'query': {'locality':params['locality']}}} } )
-                        params.pop( 'locality' )  # Make it clear it's being removed.
-                        retlist += add_attributes()
+                        params.pop( 'locality' )
+                        # retlist.append( { 'object': {'class': node['class']}, \
+                        #     'action': {'method': {'query': {'locality':params['locality']}}} } )
+                        # params.pop( 'locality' )  # Make it clear it's being removed.
+                        # retlist += add_attributes()
             elif ntype == 'and' or ntype == 'or':
                 pass
             else:

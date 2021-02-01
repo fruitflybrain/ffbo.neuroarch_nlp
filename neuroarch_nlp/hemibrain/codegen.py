@@ -681,7 +681,7 @@ def generate_json( sast ):
                         if 'locality' in params:
                             retlist.append( { 'object': {'memory': 0},
                                 'action': {'method': {'owns': \
-                                      {"cls": node['class']]} } }})
+                                      {"cls": node['class']} } }})
                             params.pop('locality')
                         else:
                             retlist.append( { 'object': {'memory': 0},

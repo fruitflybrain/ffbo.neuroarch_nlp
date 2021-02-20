@@ -271,7 +271,9 @@ transmitters = {
     #'dan':           'dopamine',
     #'dans':           'dopamine',
     'oa':            'octopamine',
-    'oan':           'octopamine'
+    'oan':           'octopamine',
+    'histamine':     'histamine',
+    'histaminergic': 'histamine',
 }
 
 localities = {

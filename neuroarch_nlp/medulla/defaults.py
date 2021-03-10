@@ -107,6 +107,10 @@ subregions = {
     'column 3y': ('','Circuit','Column 3Y'),
     'column 3z': ('','Circuit','Column 3Z'),
 }
+subregions.update(
+    {'ommatidium {}'.format(i): \
+        ('', 'Circuit', 'Ommatidium {}'.format(i)) \
+     for i in range(721)})
 
 neuron_types = {}
 neuron_types.update({'r{}'.format(i): '/rR{}(.*)'.format(i) for i in range(1,9)})
@@ -126,8 +130,8 @@ neuron_types.update({'pm{}'.format(i): '/rPm{}-(.*)'.format(i) for i in range(1,
 neuron_types.update({'tm{}'.format(i): '/rTm{}-(.*)'.format(i) for i in range(1,40)})
 neuron_types['tm5'] = '/rTm5[abc]-(.*)'
 neuron_types['tm5a'] = '/rTm5a-(.*)'
-neuron_types['tm5b'] = '/rTm5a-(.*)'
-neuron_types['tm5c'] = '/rTm5a-(.*)'
+neuron_types['tm5b'] = '/rTm5b-(.*)'
+neuron_types['tm5c'] = '/rTm5c-(.*)'
 neuron_types['tm3 ant'] = '/rTm3-(.*)-ant'
 neuron_types['tm3 post'] = '/rTm3-(.*)-post'
 neuron_types['tm3a'] = '/rTm3-(.*)-ant'

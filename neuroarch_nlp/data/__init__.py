@@ -1,4 +1,4 @@
-import defaults
+from . import defaults
 
 # These default values are included for convenience.
 # You'll want to dynamically load these and other values from your database(s).

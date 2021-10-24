@@ -63,7 +63,6 @@ def get_name_expression( name, syn_to=None ):
         if subregions[name][2]:
             expr+=HasName(subregions[name][2])
     elif name in arborization_regions:
-        print(name, arborization_regions[name])
         expr = IsBrainRegion()
         expr += HasName(arborization_regions[name])
     else:

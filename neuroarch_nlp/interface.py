@@ -1,11 +1,12 @@
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+
 import re
 import traceback
-import six
 import collections
 import importlib
+
 import quepy
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 from .data import colors_values
 
@@ -38,20 +39,6 @@ closing = {'$': '$', '/r': '/r', '/[': ']', '/:': ']'}
 
 def replace_special_char(text):
     return ''.join(['\\\\'+s if s in special_char else s for s in text])
-
-def convert(data):
-    # TODO: Still in py2
-    if isinstance(data, (basestring, str)):
-        if isinstance(data, unicode):
-            return data
-        else:
-            return six.u(data)
-    elif isinstance(data, collections.Mapping):
-        return dict(map(convert, data.items()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(convert, data))
-    else:
-        return data
 
 class PrototypeBaselineTranslator(object):
     def __init__(self, app_name):
@@ -173,8 +160,7 @@ class PrototypeBaselineTranslator(object):
                 na_query[ 'user' ] = user
                 if format_type:
                     na_query[ 'format' ] = format_type
-                na_query1 = convert(na_query)
-                return na_query1
+                return na_query
             else:
                 return {}
         except Exception as e:

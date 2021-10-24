@@ -137,7 +137,8 @@ synapse_type = G( (L('axo-axonic') | L('dendro-dendritic') | L('modulatory') | L
 synapse_num_clause = ( Qu( L('with') | (Qu(L('that')) + L('have')) | L( 'connect') ) + \
                 G( ((( L('more') | L('less') ) + L('than') ) | L('atleast') | (L('at') + L('least')) | L('atmost') | (L('at') + L('most'))) + P('CD') + \
                 Qu(synapse_type) + \
-                ( L('synapse') | L('connection') | L('synapses') | L('connections') ), 'synapse_num_clause' ))
+                ( L('synapse') | L('synapsis') | L('connection') | L('synapses') | L('connections') ), 'synapse_num_clause' ))
+                # 'synapsis' is to get around with the spacy singular form rule
 
 in_region_list = Star(L('both')) + brainregion2 + Star(
                  (in_lem | (Qu(P(',')) + (L('and') | L('or')) + Qu(L('not')) + Qu(in_lem))) + brainregion2)

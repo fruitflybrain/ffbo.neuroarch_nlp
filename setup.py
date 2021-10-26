@@ -36,7 +36,7 @@ setup(
         ],
     install_requires = [
         'python-Levenshtein',
-        'fuzzywuzzy', 
+        'thefuzz', 
         'datadiff',
         'spacy >= 3',
         'nltk',

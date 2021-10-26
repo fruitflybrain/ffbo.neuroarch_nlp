@@ -5,8 +5,8 @@ import collections
 import importlib
 
 import quepy
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+from thefuzz import fuzz
+from thefuzz import process
 
 from .data import colors_values
 
@@ -182,9 +182,17 @@ class PrototypeBaselineTranslator(object):
                 corr_words.append( word )
             else:
                 # NOTE: score_cutoff is a parameter that could be tweaked.
-                corr_word = process.extractOne( word.lower(), self.na_unigrams, scorer=fuzz.ratio, score_cutoff=80 )
+                corr_word = process.extract( word.lower(), self.na_unigrams, scorer=fuzz.ratio)
+                corr_word = sorted([(score, [w for w,s in corr_word if s == score]) for score in set([s[1] for s in corr_word])])[-1]
+                if len(corr_word[1]) > 1:
+                    if word in corr_word[1]:
+                        corr_word = word
+                    else:
+                        corr_word = corr_word[1][0]
+                else:
+                    corr_word = corr_word[1][0]
                 if corr_word:
-                    corr_words.append( corr_word[0] )  # [0] is the word, [1] is its score
+                    corr_words.append( corr_word )  # [0] is the word, [1] is its score
                 # NOTE: Original implementation dropped words that are not in our "dictionary"
                 else:
                     corr_words.append(word.lower())

@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name="neuroarch_nlp",
-    version="0.3.0",
+    version="0.4.0",
     description="A package for translating English queries to NeuroArch Database queries",
     long_description=open('README.md').read(),
     author="Wesley A. S. Bruning, Nikul Ukani, Yiyin Zhou",
@@ -36,10 +36,10 @@ setup(
         ],
     install_requires = [
         'python-Levenshtein',
-        'fuzzywuzzy >= 0.12.0', 
+        'thefuzz', 
         'datadiff',
-        'spacy == 1.6.0',
-        'nltk <= 3.4',
+        'spacy >= 3',
+        'nltk',
         'refo',
     ],
     packages = find_packages()

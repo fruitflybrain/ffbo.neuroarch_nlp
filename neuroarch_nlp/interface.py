@@ -1,11 +1,12 @@
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+
 import re
 import traceback
-import six
 import collections
 import importlib
+
 import quepy
+from thefuzz import fuzz
+from thefuzz import process
 
 from .data import colors_values
 
@@ -38,20 +39,6 @@ closing = {'$': '$', '/r': '/r', '/[': ']', '/:': ']'}
 
 def replace_special_char(text):
     return ''.join(['\\\\'+s if s in special_char else s for s in text])
-
-def convert(data):
-    # TODO: Still in py2
-    if isinstance(data, (basestring, str)):
-        if isinstance(data, unicode):
-            return data
-        else:
-            return six.u(data)
-    elif isinstance(data, collections.Mapping):
-        return dict(map(convert, data.items()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(convert, data))
-    else:
-        return data
 
 class PrototypeBaselineTranslator(object):
     def __init__(self, app_name):
@@ -173,8 +160,7 @@ class PrototypeBaselineTranslator(object):
                 na_query[ 'user' ] = user
                 if format_type:
                     na_query[ 'format' ] = format_type
-                na_query1 = convert(na_query)
-                return na_query1
+                return na_query
             else:
                 return {}
         except Exception as e:
@@ -196,9 +182,17 @@ class PrototypeBaselineTranslator(object):
                 corr_words.append( word )
             else:
                 # NOTE: score_cutoff is a parameter that could be tweaked.
-                corr_word = process.extractOne( word.lower(), self.na_unigrams, scorer=fuzz.ratio, score_cutoff=80 )
+                corr_word = process.extract( word.lower(), self.na_unigrams, scorer=fuzz.ratio)
+                corr_word = sorted([(score, [w for w,s in corr_word if s == score]) for score in set([s[1] for s in corr_word])])[-1]
+                if len(corr_word[1]) > 1:
+                    if word in corr_word[1]:
+                        corr_word = word
+                    else:
+                        corr_word = corr_word[1][0]
+                else:
+                    corr_word = corr_word[1][0]
                 if corr_word:
-                    corr_words.append( corr_word[0] )  # [0] is the word, [1] is its score
+                    corr_words.append( corr_word )  # [0] is the word, [1] is its score
                 # NOTE: Original implementation dropped words that are not in our "dictionary"
                 else:
                     corr_words.append(word.lower())

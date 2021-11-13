@@ -85,7 +85,7 @@ adjnouns = Plus(adjnoun)
 # (which could, e.g., be incorporated with Predicate)
 action_keywords = {'show', 'list', 'graph', 'visualize', 'display', 'add',
                    'remove', 'hide', 'keep', 'retain', 'pin', 'unpin', 'unhide',
-                   'color', 'uncolor', 'animate', 'unanimate', 'blink', 'unblink'}
+                   'color', 'uncolor', 'varcolor', 'animate', 'unanimate', 'blink', 'unblink'}
 
 # TODO: Consider using a similarity/distance metric (which could, e.g., be incorporated with Predicate)
 action_keyword = R( lambda token: token is not None and token.lemma in action_keywords )
@@ -137,7 +137,8 @@ synapse_type = G( (L('axo-axonic') | L('dendro-dendritic') | L('modulatory') | L
 synapse_num_clause = ( Qu( L('with') | (Qu(L('that')) + L('have')) | L( 'connect') ) + \
                 G( ((( L('more') | L('less') ) + L('than') ) | L('atleast') | (L('at') + L('least')) | L('atmost') | (L('at') + L('most'))) + P('CD') + \
                 Qu(synapse_type) + \
-                ( L('synapse') | L('connection') | L('synapses') | L('connections') ), 'synapse_num_clause' ))
+                ( L('synapse') | L('synapsis') | L('connection') | L('synapses') | L('connections') ), 'synapse_num_clause' ))
+                # 'synapsis' is to get around with the spacy singular form rule
 
 in_region_list = Star(L('both')) + brainregion2 + Star(
                  (in_lem | (Qu(P(',')) + (L('and') | L('or')) + Qu(L('not')) + Qu(in_lem))) + brainregion2)
@@ -179,7 +180,7 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
     subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
 
     regex = subqueries \
-            + Qu(G(color, 'color')) \
+            + Qu(G(color, 'color') | G(color, 'varcolor')) \
             + Qu(L('as') + Qu(L('a')) + G(noun, 'formatting')) \
             + Qu(P('.'))
 
@@ -265,7 +266,7 @@ class ColorCommand(QuestionTemplate):
     """
         e.g. Color, Color [color]
     """
-    regex = L('color') + Qu( G( R(is_color), 'color' ) ) + Qu(P('.'))
+    regex = (L('color')|L('varcolor')) + Qu( G( R(is_color), 'color' ) ) + Qu(P('.'))
 
     def interpret( self, match ):
         return interpret_ColorCommand( self, match )

@@ -42,5 +42,8 @@ setup(
         'nltk',
         'refo',
     ],
+    package_data = {
+        'hemibrain': ['neuron_types.json']
+    },
     packages = find_packages()
 )

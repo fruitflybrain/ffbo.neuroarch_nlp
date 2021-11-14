@@ -21,6 +21,10 @@ arborization_regions = [('MED(L)', ['left medulla', 'left med', 'left me', 'med_
                         ('MED-M9(L)', ['medulla stratum 9', 'm9', 'stratum m9']),
                         ('MED-M10(L)', ['medulla stratum 10', 'm10', 'stratum m10'])]
 
+for a, b in arborization_regions:
+    for i in range(len(b)):
+        b[i] = b[i].lower()
+
 # 'subregion query name': (Class, Instance, Name)
 subregions = {
     'm1': ('Subregion', '', 'MED-M1(L)'),
@@ -111,6 +115,8 @@ subregions.update(
     {'ommatidium {}'.format(i): \
         ('', 'Circuit', 'Ommatidium {}'.format(i)) \
      for i in range(721)})
+
+subregions = {k.lower(): v for k, v in subregions.items()}
 
 neuron_types = {}
 neuron_types.update({'r{}'.format(i): '/rR{}(.*)'.format(i) for i in range(1,9)})

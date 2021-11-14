@@ -196,6 +196,11 @@ arborization_regions = [('M1', ['medulla layer 1', 'm1', 'layer m1']),
                         ('M9', ['medulla layer 9', 'm9', 'layer m9']),
                         ('M10', ['medulla layer 10', 'm10', 'layer m10'])]
 
+
+for a, b in arborization_regions:
+    for i in range(len(b)):
+        b[i] = b[i].lower()
+        
 # 'subregion query name': (Class, Instance, Name)
 subregions = {
     'home cartridge': ('Cartridge','','home'),
@@ -404,6 +409,8 @@ subregions = {
     'column': ('','Circuit',''),
     'columnar':('','Circuit','')
 }
+
+subregions = {k.lower(): v for k, v in subregions.items()}
 
 neuron_types = {
     'osn':'OSN','orn':'OSN','olfactory sensory neurons':'OSN',

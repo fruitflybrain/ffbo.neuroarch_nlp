@@ -38,7 +38,7 @@ setup(
         'fuzzywuzzy >= 0.12.0', 
         'datadiff',
         'spacy == 1.6.0',
-        'nltk <= 3.4',
+        'nltk <= 3.5',
         'refo',
     ],
     packages = find_packages()

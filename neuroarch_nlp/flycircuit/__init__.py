@@ -1,1 +1,1 @@
-from grammar import *
+from .grammar import *

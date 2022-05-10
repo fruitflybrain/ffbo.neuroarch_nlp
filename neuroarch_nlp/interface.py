@@ -136,7 +136,7 @@ class PrototypeBaselineTranslator(object):
             if spell_correct:
                 nl_string = self.correct_spelling( nl_string )
                 if nl_string == '':
-                    return { 'user': user, 'format': format_type }
+                    return {}
 
             # The target and metadata (1st and 3rd returned value) from quepy are ignored
             _, na_query, _ = self.translate( nl_string )

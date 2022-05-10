@@ -1030,6 +1030,16 @@ with open('{}/neuron_types.json'.format(path), 'r') as f:
     all_types = json.load(f)
 
 neuron_types = {k.lower().replace('+', ''): "/r(?i){}[^0-9a-zA-Z](.*)".format(k.split('(')[0].replace('+', '\\\+')) for k in all_types}
+subtypes = {}
+for n in all_types:
+    if len(n.split('_')) > 1:
+        sub_names = n.split('_')
+        if len(sub_names[-1]) == 1:
+            name = '_'.join(sub_names[:-1])
+            if name not in subtypes:
+                subtypes[name] = []
+            subtypes[name].append(sub_names[-1])
+neuron_types.update({k.lower().replace('+', ''): "/r(?i){}_({})[^0-9a-zA-Z](.*)".format(k.replace('+', '\\\+'), '|'.join(v))  for k, v in subtypes.items()})
 
 neuron_types.update({
     'osn':'/r(.*)ORN(.*)',

@@ -1,3 +1,5 @@
+import json, pathlib
+
 # TODO: Support other valid spellings of terms? e.g. "centre" for "center"
 #       The basic spelling correction, with its current parameters,
 #       should accept most of these alternate valid spellings.
@@ -118,18 +120,21 @@ subregions.update(
 
 subregions = {k.lower(): v for k, v in subregions.items()}
 
-neuron_types = {}
-neuron_types.update({'r{}'.format(i): '/rR{}(.*)'.format(i) for i in range(1,9)})
-neuron_types.update({'l{}'.format(i): '/rL{}(.*)'.format(i) for i in range(1,6)})
+path = pathlib.Path(__file__).parent.resolve()
+with open('{}/neuron_types.json'.format(path), 'r') as f:
+    all_types = json.load(f)
+
+neuron_types = {k.lower().replace('+', ''): "/r(?i){}{}(.*)".format(k.split('(')[0].replace('+', '\\\+'), "[^0-9Y]" if k[-1].isnumeric() else '[^Y]') for k in all_types}
+
+neuron_types.update({'r{}'.format(i): '/r(?i)R{}[^0-9](.*)'.format(i) for i in range(1,9)})
+neuron_types.update({'l{}'.format(i): '/r(?i)L{}[^0-9](.*)'.format(i) for i in range(1,6)})
 neuron_types['photoreceptors'] = '/rR[1-9](.*)'
-neuron_types['lamina_monopolar'] = '/rL[1-5](.*)'
-neuron_types.update({'lawf{}'.format(i): '/rLawf{}(.*)'.format(i) for i in range(1,3)})
-neuron_types['lamina_wide_field'] = '/rLawf[1-2](.*)'
-neuron_types['lawf'] = '/rLawf[1-2](.*)'
-neuron_types.update({'c{}'.format(i): '/rC{}(.*)'.format(i) for i in range(2,4)})
-neuron_types.update({'t{}'.format(i): '/rT{}(.*)'.format(i) for i in range(1,5)})
-neuron_types['t2a'] = '/rT2a(.*)'
-neuron_types.update({'t4{}'.format(i): '/rT4{}(.*)'.format(i) for i in ['a', 'b', 'c', 'd']})
+neuron_types['lamina monopolar cell'] = '/rL[1-5](.*)'
+neuron_types['lmc'] = '/rL[1-5](.*)'
+neuron_types.update({'lawf{}'.format(i): '/r(?i)Lawf{}(.*)'.format(i) for i in range(1,3)})
+neuron_types['lamina wide field'] = '/r(?i)Lawf[1-2](.*)'
+neuron_types['lawf'] = '/r(?i)Lawf[1-2](.*)'
+# neuron_types.update({'t4{}'.format(i): '/rT4{}(.*)'.format(i) for i in ['a', 'b', 'c', 'd']})
 neuron_types.update({'mi{}'.format(i): '/rMi{}-(.*)'.format(i) for i in range(1,20)})
 neuron_types.update({'dm{}'.format(i): '/rDm{}-(.*)'.format(i) for i in range(1,30)})
 neuron_types.update({'pm{}'.format(i): '/rPm{}-(.*)'.format(i) for i in range(1,30)})
@@ -153,3 +158,4 @@ neuron_types['tangential'] = '/rtan-(.*)'
 neuron_types['mt'] = '/rMt(.*)'
 neuron_types['all'] = '/r(.*)'
 neuron_types.update({'regex{}'.format(i): 'regex{}'.format(i) for i in range(100)})
+

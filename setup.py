@@ -46,6 +46,5 @@ setup(
         'hemibrain': ['neuron_types.json'],
         'medulla': ['neuron_types.json']
     },
-    dependency_links=['https://github.com/fruitflybrain/refo/tarball/master#egg=refo-0.14'],
     packages = find_packages()
 )

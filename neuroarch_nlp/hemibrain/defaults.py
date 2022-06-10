@@ -1065,6 +1065,9 @@ neuron_types.update({
     "a'b' kc": "/rKCa'b'(.*)",
     "gamma kc": "/rKCg(.*)",
     "g kc": "/rKCg(.*)",
+    "kcab": "/rKCab(.*)",
+    "kca'b'": "/rKCa'b'(.*)",
+    "kcg": "/rKCg(.*)",
     'mbon': '/rMBON(.*)',
     'mushroom body output neurons': '/r(.*)MBON(.*)',
     'apl': '/r(.*)APL(.*)R_1',
@@ -1082,6 +1085,7 @@ neuron_types.update({
     'lobula tangential': '/rLT(.*)',
     'lptc': '/rLPTC(.*)',
     'gln': '/rGLN(.*)',
+    'LNv': '/r(.*)(l|s)-LNv(.*)',
     'all': '/r(.*)'
 })
 

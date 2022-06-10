@@ -154,6 +154,9 @@ class PrototypeBaselineTranslator(object):
                             if nn['uname'].startswith('regex'):
                                 regex_number = nn.pop('uname')
                                 nn[reg_dict[regex_number]['query_field']] = reg_dict[regex_number]['reg_exp']
+                                if reg_dict[regex_number]['query_field'] == 'referenceId':
+                                    if 'class' in n['object'] and n['object']['class'] == 'Neuron':
+                                        n['object']['class'] = 'NeuronAndFragment'
                     except KeyError:
                         continue
             if na_query:

@@ -43,8 +43,7 @@ setup(
         'refo @ https://github.com/fruitflybrain/refo/tarball/master#egg=refo-0.14',
     ],
     package_data = {
-        'hemibrain': ['neuron_types.json'],
-        'medulla': ['neuron_types.json']
+        "": ['neuron_types.json']
     },
     packages = find_packages()
 )

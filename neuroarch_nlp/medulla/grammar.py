@@ -84,7 +84,7 @@ adjnouns = Plus(adjnoun)
 # As stated in the README, consider using similarity/distance metrics
 # (which could, e.g., be incorporated with Predicate)
 action_keywords = {'show', 'list', 'graph', 'visualize', 'display', 'add',
-                   'remove', 'hide', 'keep', 'retain', 'pin', 'unpin', 'unhide',
+                   'remove', 'hide', 'keep', 'retain', 'pin', 'unpin', 'unhide', 'reveal',
                    'color', 'uncolor', 'varcolor', 'animate', 'unanimate', 'blink', 'unblink'}
 
 # TODO: Consider using a similarity/distance metric (which could, e.g., be incorporated with Predicate)

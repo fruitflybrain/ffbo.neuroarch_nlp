@@ -484,6 +484,8 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
             final_query += HasVerb('unhide')
         elif 'hide' in form_lems:
             final_query += HasVerb('hide')
+        elif 'reveal' in form_lems:
+            final_query += HasVerb('reveal')
     # NOTE: "format" group overrides any "opener" group--for formatting
     #       e.g. "List neurons in Lamina as morphology" will use morphology formatting.
     # TODO: What about 'show gabaergic neurons as? [color]' or 'as? [blinking]' ?

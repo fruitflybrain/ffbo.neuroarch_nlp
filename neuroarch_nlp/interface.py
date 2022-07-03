@@ -26,11 +26,11 @@ na_unigrams = {'to', 'in', 'show', 'display', 'hide', 'remove', 'pre', 'post', '
                      'channel', 'expressing', 'process', 'processes', 'transmitting',
                      'cart', 'retina', 'innervate', 'innervating', 'innervation', 'cell',
                      'from', 'keep', 'retain', 'color', 'uncolor', 'varcolor', 'pin', 'unpin', 'blink',
-                     'unblink', 'animate', 'unanimate', 'unhide',
+                     'unblink', 'animate', 'unanimate', 'unhide', 'reveal',
                      'connections', 'axons', 'dendrites', 'neurons', 'arborizations',
                      'inputs', 'outputs', 'interneurons', 'innervations', 'cells',
                      'than','atleast','least','at','most','atmost','more','less',
-                     'synapse','synapses'}
+                     'synapse','synapses', 'both'}
 
 digit_or_rgbhex = re.compile( r'\b[0-9]+\b|\b(#?[a-fA-F0-9]{1,6})\b' )
 simple_tokens = re.compile( r"\b[a-zA-Z0-9_\-']+\b", re.I )

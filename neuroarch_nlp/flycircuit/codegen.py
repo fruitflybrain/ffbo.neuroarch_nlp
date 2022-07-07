@@ -237,7 +237,7 @@ def generate_json( sast ):
     root = get_owner( sast.head )
     set_owners( sast.head )
 
-    def get_node_najson( memory, op, node_id ):
+    def get_node_najson( memory, op, node_id, parent_type = None):
         """ Given a node in the SAST,
             output a corresponding list of NeuroArch (JSON) calls.
 
@@ -260,7 +260,7 @@ def generate_json( sast ):
         if ntype == 'and':
             lastlen = None
             for part in node['part']:
-                retlist += get_node_najson( memory + len(retlist), op, part )
+                retlist += get_node_najson( memory + len(retlist), op, part, parent_type = parent_type)
                 if lastlen: # TODO: Make sure this is okay if lastlen == 0
 
                     retlist.append(
@@ -269,7 +269,7 @@ def generate_json( sast ):
         elif ntype == 'or':
             lastlen = None
             for part in node['part']:
-                retlist += get_node_najson( memory + len(retlist), op, part )
+                retlist += get_node_najson( memory + len(retlist), op, part, parent_type = parent_type)
                 if lastlen:
                     retlist.append(
                         {"action":{ "op":{ "__or__":{ "memory": len(retlist) - lastlen}}}, "object":{"memory": 0}})
@@ -401,6 +401,11 @@ def generate_json( sast ):
                     elif node['key'] == 'locality':
                         # Taken care of by the in neuronpil query
                         pass
+                    elif node['key'] == 'name':
+                        if parent_type == 'neuron':
+                            params[ 'uname' ] = node['value']
+                        else:
+                            params[ node['key'] ] = node['value']
                     else:
                         if node['value'] == 'True':
                             params[ node['key'] ] = True
@@ -452,6 +457,8 @@ def generate_json( sast ):
                     'action': {'method': {'traverse_owns': {'cls': 'Neuron'}} } } )
                 retlist.append( { 'object': {'memory': 0},
                     'action': {'op': {'__and__': {'memory': memory + len(retlist)}}} } )
+            elif ntype == 'and' or ntype == 'or':
+                pass
             else:
                 log.warning( "Unsupported type for 'has' relation!: %s" % ntype )
         elif op is None:
@@ -727,7 +734,7 @@ def generate_json( sast ):
             pass
 
         if 'has' in node:
-            retlist += get_node_najson( 0, 'has', node['has'] )
+            retlist += get_node_najson( 0, 'has', node['has'], parent_type = ntype)
 
         # TODO: Clean this up. Is it even necessary (with codegen_optimization, at least)?
         if not (op is None and ntype == 'neuron'):

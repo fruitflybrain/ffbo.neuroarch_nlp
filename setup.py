@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name="neuroarch_nlp",
-    version="0.4.0",
+    version="0.5.0",
     description="A package for translating English queries to NeuroArch Database queries",
     long_description=open('README.md').read(),
     author="Wesley A. S. Bruning, Nikul Ukani, Yiyin Zhou",

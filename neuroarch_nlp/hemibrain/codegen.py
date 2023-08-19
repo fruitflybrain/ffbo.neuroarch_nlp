@@ -351,7 +351,7 @@ def generate_json( sast ):
                         outdict = { 'object': {'memory': 0},
                             'action': {'method': {'owns': {'cls': node['class']}}}}
                     else:
-                        if node['class'] == 'Neuron':
+                        if node['class'] == 'Neuron' and 'name' in node:
                             outdict = { 'object': {'memory': 0},
                                         'action': {'method': {'gen_traversal_in': \
                                             {"pass_through": ["ArborizesIn", node['class'], 'instanceof',

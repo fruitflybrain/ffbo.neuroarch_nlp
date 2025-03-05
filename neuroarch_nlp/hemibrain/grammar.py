@@ -3,11 +3,10 @@ from refo import Plus, Question, Star, Group, Predicate
 from quepy.parsing import Lemma, Lemmas, Pos, QuestionTemplate
 import logging
 log = logging.getLogger('neuroarch_nlp.hemibrain.grammar')
-
-from .defaults import neuropils as raw_neuropils, arborization_regions as raw_arborization_regions, \
+from neuroarch_nlp.hemibrain.defaults import neuropils as raw_neuropils, arborization_regions as raw_arborization_regions, \
     subregions, neuron_types
 
-from ..data import colors_values, transmitters, localities, synapticities, \
+from neuroarch_nlp.data import colors_values, transmitters, localities, synapticities, \
                    ownerinstances, othermods
 
 # NOTE: In general, this code is very much "under construction": there are known bugs,
@@ -157,13 +156,33 @@ synaptic_phrase = G( Qu( L('presynaptic') | L('postsynaptic') )
                    + Qu( Qu(L('and')|L('or'))
                          + in_lem + G( in_region_list, 'region_list' ) ), 'synaptic_phrase' )
 
+synapse_direction = G(
+    Qu(L('from')) + 
+    ((Qu(neuron_modifiers) + neurons) | (neuron_modifiers + Qu(neurons))) +
+    Qu(L('to') + 
+       ((Qu(neuron_modifiers) + neurons) | (neuron_modifiers + Qu(neurons)))), 
+    'synapse_direction')
+
+# First define the basic patterns
+synapse_term = (L('synapse') | L('synapsis') | L('synapses'))
+direction = (L('to') | L('onto') | L('from'))
+neuron_type = (L('l1') | L('mi1') | L('t4') | L('l2'))
+neuron_target = (neuron_type + neurons)
+
+# Make the pattern handle directional queries
+synapse_query = G(Qu(opener) + 
+                  synapse_term + 
+                  direction +
+                  neuron_target, 'synapse_query')
+
+
 color = R(is_color)
 
 ###############################################
 
 from .grammar_semantics import interpret_NeuronsQuery_MoreGeneral, interpret_NeuronsQuery_MoreSpecific, \
     interpret_ColorCommand, interpret_VerbCommand, interpret_ClearAllCommand, \
-    interpret_ClearSomeCommand
+    interpret_ClearSomeCommand, interpret_SynapseQuery
 
 class NeuronsQuery_MoreSpecific(QuestionTemplate):
     weight = 3
@@ -187,80 +206,20 @@ class NeuronsQuery_MoreSpecific(QuestionTemplate):
     def interpret(self, match):
         return interpret_NeuronsQuery_MoreSpecific( self, match )
 
-'''
-class NeuronsQuery_MoreSpecific2(QuestionTemplate):
-    #Should be redundant now
-    weight = 2
-
-    subquery = G(Qu(opener), 'opener') \
-               + Qu(universal_quantifier) + Qu(L('of')) \
-               + Qu(L('the') | L('a') | L('an')) \
-               + neuron_modifiers + Qu(neurons)\
-               + (Qu(synaptic_phrase) + Qu(clauses)) \
-               + Qu(Qu(L('and') | L('or')) \
-                    + in_lem + G(in_region_list, 'region_list')) + \
-               Qu(clauses)
-    subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
-
-    regex = subqueries \
-            + Qu(G(color, 'color')) \
-            + Qu(L('as') + Qu(L('a')) + G(noun, 'formatting')) \
-            + Qu(P('.'))
+class SynapseQuery(QuestionTemplate):
+    """
+    Handles queries about synapses, such as:
+    "Show all output synapses that go to L1 neurons"
+    """
+    weight = 2  # Give it a higher weight than other patterns
+    
+    regex = synapse_query \
+          + Qu(G(color, 'color')) \
+          + Qu(L('as') + Qu(L('a')) + G(noun, 'formatting')) \
+          + Qu(P('.'))
 
     def interpret(self, match):
-        print 'more specific 2'
-        return interpret_NeuronsQuery_MoreSpecific( self, match )
-
-class NeuronsQuery_MoreGeneral(QuestionTemplate):
-    """
-        e.g. "Show all neurons in the Lamina."
-        This is an older class which could benefit from some of the "clauses" above.
-    """
-
-    neuron_modifier_list = (P('JJ') | P('NN')) \
-                           + Star(Qu(L('and') | P(',')) + (P('JJ') | P('NN')))
-    # neuron_modifier_list2 is more in line with what we'd like
-    # neuron_modifier_list to be (but cannot currently be because of its context).
-    # TODO: Review this.
-    neuron_modifier_list2 = adjnoun + Star(Qu(L('and') | P(',')) + adjnoun)
-
-    transmitters_clause = \
-        ((Qu(L('that') | L('which')) + (L('transmit') | L('release'))) |
-         (L('have') + Qu(L('transmitter') | L('neurotransmitter')))) + \
-        G(neuron_modifier_list2, 'transmitters')
-
-    connections_clause = \
-        ((L('with') | L('have'))
-         + ((Qu(L('synaptic')) + L('connection'))
-            | L('dendrite') | L('axon') | L('arborization') | L('arborizations')
-            | L('process'))) \
-        | L('arborize')
-
-    in_lem = L('in') | L('within') | L('inside') | Ls('inside of')
-    in_region_list = brainregion + Star(
-        ((Qu(P(',')) + L('and') + Qu(L('not')) + Qu(in_lem))
-         | (Qu(P(',')) + L('or') + Qu(L('not')) + Qu(in_lem))
-         | in_lem) + brainregion)
-
-    clause = expressing_marker | transmitters_clause | connections_clause | in_quant_conns | synapse_num_clause
-    clauses = clause + Star(Qu(P(',')) + Qu(L('and') | L('or')) + clause)
-
-    subquery = G(Qu(opener), 'opener') \
-               + Qu(universal_quantifier) + Qu(P('DT')) \
-               + G(Qu(neuron_modifier_list), 'neuron_modifiers') \
-               + G(Qu(P('NNP')), 'neuron_name') \
-               + neurons \
-               + Qu(clauses) \
-               + Qu(in_lem + G(in_region_list, 'region_list'))
-
-    subqueries = subquery + Star(Qu(P(',')) + (L('and') | L('or')) + subquery)
-    subqueries = G(subqueries, 'subqueries')
-    regex = subqueries \
-          + G(Qu(L('as') + Qu(L('a')) + noun), 'formatting') + Qu(P('.'))
-
-    def interpret(self, match):
-        return interpret_NeuronsQuery_MoreGeneral( self, match )
-'''
+        return interpret_SynapseQuery(self, match)
 
 class ColorCommand(QuestionTemplate):
     """

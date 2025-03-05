@@ -3,8 +3,12 @@ import re
 import traceback
 import collections
 import importlib
+import sys
+import os
+sys.path.append(os.path.abspath('/Users/me/Desktop/PL project 2/quepy'))
 
 import quepy
+
 from thefuzz import fuzz
 from thefuzz import process
 
@@ -87,6 +91,7 @@ class PrototypeBaselineTranslator(object):
             #     nl_string = ''.join([exp if i != 1 else 'regex' for i, exp in enumerate(exps)])
             #     reg_exp = ["{}".format(i.strip()) for i in exps[1].split(',')]
             # nl_string = nl_string.strip()
+            print("Interface py: nl_string: ", nl_string)
             a = nl_string
             signs = [(i, a[i] if a[i] in ['$',']'] else a[i:i+2]) \
                      for i in range(len(a)) if a[i] == '$' or \
@@ -133,6 +138,8 @@ class PrototypeBaselineTranslator(object):
                     current = None
             new_exp += a[last+1:]
             nl_string = new_exp
+            print("Interface py: nl_string: ", nl_string)
+
             if spell_correct:
                 nl_string = self.correct_spelling( nl_string )
                 if nl_string == '':
@@ -140,7 +147,7 @@ class PrototypeBaselineTranslator(object):
 
             # The target and metadata (1st and 3rd returned value) from quepy are ignored
             _, na_query, _ = self.translate( nl_string )
-
+            print("Interface.py, na_query: ", na_query)
             if count > 0:
                 for i, n in enumerate(na_query['query']):
                     try:

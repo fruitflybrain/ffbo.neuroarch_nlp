@@ -4,14 +4,14 @@ import logging
 log = logging.getLogger('neuroarch_nlp.hemibrain.grammar_semantics')
 
 #from .dsl import *
-from .dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, PresynapticTo, PresynapticToState, \
+from neuroarch_nlp.hemibrain.dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, PresynapticTo, PresynapticToState, \
     PostsynapticTo, PostsynapticToState, IsOwnerInstance, HasInstance, IsBrainRegion, \
     HasClass, HasName, IsNeuronModifier, IsNeuron, IsOrOp, IsAndOp, HasPart, \
     OwnedBy, HasSubregion, IsGeneticMarker, HasGeneticMarker, IsNumConnections, \
     HasMoreThan, HasLessThan, HasEqualTo, HasConnectionsTarget, HasType, HasRegion, \
     FromRegion, ToRegion, IsConnection, Has, HasConnections, HasVerb, HasColor, HasFormat, \
     IsCommand, IsNumSynapses, HasAtLeast, HasAtMost
-from .grammar import neuron_types, synapticities, localities, transmitters, modifiers, \
+from neuroarch_nlp.hemibrain.grammar import neuron_types, synapticities, localities, transmitters, modifiers, \
                      neuropils, regions, lowercase_is_in, adjnoun, notneurons, modifiers_and_regions, colors_values, \
                      subregions, arborization_regions, arbregions#,ownerinstances
 
@@ -634,3 +634,28 @@ def interpret_ClearSomeCommand( self, match ):
     else:
         command = command + HasEqualTo( "1" )
     return command, "enum"
+
+def interpret_SynapseQuery(self, match):
+    """Interprets synapse queries and converts them to SAST"""
+    if hasattr(match, 'synapse_query'):
+        # Create base neuron expression
+        neuron = IsNeuron()
+        neuron += HasClass('Neuron')
+        
+        # Get the words in the match
+        words = match.words
+        
+        # Find neuron name
+        for word in words:
+            if word.token.lower() in ['l1', 'mi1', 't4', 'l2']:
+                neuron += HasName(word.token.upper())
+                break
+        
+        # Add traversal to synapses
+        if any(w.token.lower() == 'from' for w in words):
+            neuron += HasPart(IsNeuron() + 
+                            HasClass('Synapse') + 
+                            HasSubregion(IsBrainRegion()))
+        
+        return neuron, "enum"
+    return None

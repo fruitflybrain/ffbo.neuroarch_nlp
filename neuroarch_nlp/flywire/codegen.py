@@ -351,10 +351,19 @@ def generate_json( sast ):
                         outdict = { 'object': {'memory': 0},
                             'action': {'method': {'owns': {'cls': node['class']}}}}
                     else:
-                        outdict = { 'object': {'memory': 0},
-                            'action': {'method': {'gen_traversal_in': \
-                                  {"pass_through": ["ArborizesIn", node['class']],\
-                                   "min_depth": 1}}}}
+                        if node['class'] == 'Neuron' and 'name' in node:
+                            outdict = { 'object': {'memory': 0},
+                                        'action': {'method': {'gen_traversal_in': \
+                                            {"pass_through": ["ArborizesIn", node['class'], 'instanceof',
+                                                              {"uname": node["name"]}],\
+                                            "min_depth": 1}}}}
+                            retlist.append(outdict)
+                            return retlist    
+                        else:
+                            outdict = { 'object': {'memory': 0},
+                                'action': {'method': {'gen_traversal_in': \
+                                    {"pass_through": ["ArborizesIn", node['class']],\
+                                    "min_depth": 1}}}}
 
                     retlist.append( outdict )
                 else:

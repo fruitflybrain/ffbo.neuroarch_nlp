@@ -7,7 +7,7 @@ NeuroArch JSON generation--from a "semantic abstract syntax tree" (as a quepy Ex
 from copy import deepcopy
 import logging
 logging.basicConfig()
-log = logging.getLogger( 'neuroarch_nlp.l1em.codegen' )
+log = logging.getLogger( 'neuroarch_nlp.optic_lobe.codegen' )
 log.setLevel('DEBUG')
 from .dsl import HasEqualTo, HasVerb, HasColor, HasFormat
 
@@ -351,19 +351,10 @@ def generate_json( sast ):
                         outdict = { 'object': {'memory': 0},
                             'action': {'method': {'owns': {'cls': node['class']}}}}
                     else:
-                        if node['class'] == 'Neuron' and 'name' in node:
-                            outdict = { 'object': {'memory': 0},
-                                        'action': {'method': {'gen_traversal_in': \
-                                            {"pass_through": ["ArborizesIn", node['class'], 'instanceof',
-                                                              {"uname": node["name"]}],\
-                                            "min_depth": 1}}}}
-                            retlist.append(outdict)
-                            return retlist    
-                        else:
-                            outdict = { 'object': {'memory': 0},
-                                'action': {'method': {'gen_traversal_in': \
-                                    {"pass_through": ["ArborizesIn", node['class']],\
-                                    "min_depth": 1}}}}
+                        outdict = { 'object': {'memory': 0},
+                            'action': {'method': {'gen_traversal_in': \
+                                  {"pass_through": ["ArborizesIn", node['class']],\
+                                   "min_depth": 1}}}}
 
                     retlist.append( outdict )
                 else:
@@ -870,7 +861,7 @@ def generate_json( sast ):
             # If, anywhere in the output, we were about to query for all neurons,
             # we currently ignore the whole query.
             querylist = []
-
+        
         output = { 'query': querylist }
         if HasFormat.relation in node0:
             output[ 'format' ] = node0[ HasFormat.relation ]

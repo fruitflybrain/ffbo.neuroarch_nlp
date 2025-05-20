@@ -7,7 +7,7 @@ NeuroArch JSON generation--from a "semantic abstract syntax tree" (as a quepy Ex
 from copy import deepcopy
 import logging
 logging.basicConfig()
-log = logging.getLogger( 'neuroarch_nlp.l1em.codegen' )
+log = logging.getLogger( 'neuroarch_nlp.fib19.codegen' )
 log.setLevel('DEBUG')
 from .dsl import HasEqualTo, HasVerb, HasColor, HasFormat
 

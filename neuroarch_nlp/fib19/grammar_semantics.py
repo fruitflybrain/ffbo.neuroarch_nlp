@@ -1,7 +1,7 @@
 from refo import Question, finditer, Predicate
 from quepy.parsing import Lemma, Lemmas, Pos
 import logging
-log = logging.getLogger('neuroarch_nlp.hemibrain.grammar_semantics')
+log = logging.getLogger('neuroarch_nlp.fib19.grammar_semantics')
 
 #from .dsl import *
 from .dsl import IsAttribute, HasKey, HasValue, IsSynapticConnection, PresynapticTo, PresynapticToState, \
@@ -26,7 +26,7 @@ def get_name_expression( name, syn_to=None ):
         # TODO: Consider using "IsNeurotransmitter" as a class (in the DSL).
         expr = IsAttribute() + HasKey('Transmitters') + HasValue( modifiers[name] )
     elif name in neuron_types:
-        expr = IsAttribute() + HasKey('uname') + HasValue( modifiers[name] )
+        expr = IsAttribute() + HasKey('name') + HasValue( modifiers[name] )
     elif name in synapticities:
         expr = IsSynapticConnection()
         #print "syn_num", syn_num
@@ -484,7 +484,7 @@ def interpret_NeuronsQuery_MoreSpecific(self, match):
             final_query += HasVerb('unhide')
         elif 'hide' in form_lems:
             final_query += HasVerb('hide')
-        elif 'reveal' in form_lems:
+        if 'reveal' in form_lems:
             final_query += HasVerb('reveal')
     # NOTE: "format" group overrides any "opener" group--for formatting
     #       e.g. "List neurons in Lamina as morphology" will use morphology formatting.

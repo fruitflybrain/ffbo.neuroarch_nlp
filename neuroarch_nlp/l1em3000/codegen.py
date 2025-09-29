@@ -158,7 +158,7 @@ def generate_json( sast ):
                 if node_edge_val[has_nid].get('type',None) == 'attribute':
                     # NOTE: We assume "attribute" types have a "key" and a "value"
                     key = node_edge_val[has_nid]['key']
-                    if key in ['name', 'Transmitters', 'locality']:
+                    if key in ['uname', 'name', 'Transmitters', 'locality']:
                         node_edge_val[nid][ key ] = node_edge_val[has_nid]['value']
 
                         # Now delete the 'attribute' node and the 'has' relation to it
@@ -293,9 +293,9 @@ def generate_json( sast ):
                     retlist.append( outdict )
                 else:
                     log.warning( "Region has no '(node_)class or instance'!" )
-                if 'name' in node: # TODO: This is identical to below. Remove redundancy.
+                if 'uname' in node: # TODO: This is identical to below. Remove redundancy.
                     outdict = { 'object': {'memory': 0}, 'action': \
-                                    {'method': {'has': {'uname': node['name']}} } }
+                                    {'method': {'has': {'uname': node['uname']}} } }
                     retlist.append( outdict )
             elif ntype == 'neuron':
                 if 'region' in node:
@@ -351,10 +351,19 @@ def generate_json( sast ):
                         outdict = { 'object': {'memory': 0},
                             'action': {'method': {'owns': {'cls': node['class']}}}}
                     else:
-                        outdict = { 'object': {'memory': 0},
-                            'action': {'method': {'gen_traversal_in': \
-                                  {"pass_through": ["ArborizesIn", node['class']],\
-                                   "min_depth": 1}}}}
+                        if node['class'] == 'Neuron' and 'uname' in node:
+                            outdict = { 'object': {'memory': 0},
+                                        'action': {'method': {'gen_traversal_in': \
+                                            {"pass_through": ["ArborizesIn", node['class'], 'instanceof',
+                                                              {"uname": node["uname"]}],\
+                                            "min_depth": 1}}}}
+                            retlist.append(outdict)
+                            return retlist    
+                        else:
+                            outdict = { 'object': {'memory': 0},
+                                'action': {'method': {'gen_traversal_in': \
+                                    {"pass_through": ["ArborizesIn", node['class']],\
+                                    "min_depth": 1}}}}
 
                     retlist.append( outdict )
                 else:
@@ -363,9 +372,9 @@ def generate_json( sast ):
                 # NOTE: We assume that, if any of these checks pass (e.g. "name" is in this node),
                 #       then they are NOT (also) in a separate node (e.g. via "has").
                 #       This means our analysis must generate the SAST without duplication.
-                if 'name' in node:
+                if 'uname' in node:
                     retlist.append( { 'object': {'memory': 0}, 'action':
-                        {'method': {'has': {'uname': node['name']}} } } )
+                        {'method': {'has': {'uname': node['uname']}} } } )
                 if 'Transmitters' in node:
                     retlist.append( { 'object': {'memory': 0}, 'action':
                         {'method': {'has': {'Transmitters': [ node['Transmitters'] ]}} } } )
@@ -401,7 +410,7 @@ def generate_json( sast ):
                     elif node['key'] == 'locality':
                         # Taken care of by the in neuronpil query
                         pass
-                    elif node['key'] == 'name':
+                    elif node['key'] in ['uname', 'name']:
                         if parent_type == 'neuron':
                             params[ 'uname' ] = node['value']
                         else:
@@ -484,6 +493,8 @@ def generate_json( sast ):
                 params = {}
                 if 'name' in node:
                     params['name'] = node['name']
+                if 'uname' in node:
+                    params['uname'] = node['uname']
                 if 'Transmitters' in node:
                     params['Transmitters'] = [ node['Transmitters'] ]
                 if 'locality' in node:
@@ -710,6 +721,11 @@ def generate_json( sast ):
                         retlist.append( { 'object': {'class': node['class']}, \
                             'action': {'method': {'query': {'uname' if node['class'] == 'Neuron' else 'name':params['name']}}} } )
                         params.pop( 'name' )  # Make it clear it's being removed.
+                        retlist += add_attributes()
+                    elif 'uname' in params:
+                        retlist.append( { 'object': {'class': node['class']}, \
+                            'action': {'method': {'query': {'uname': params['uname']}}} } )
+                        params.pop( 'uname' )  # Make it clear it's being removed.
                         retlist += add_attributes()
                     elif 'Transmitters' in params:
                         retlist.append( { 'object': {'class': 'NeurotransmitterData'}, 'action': \

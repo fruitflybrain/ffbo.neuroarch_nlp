@@ -26,7 +26,7 @@ def get_name_expression( name, syn_to=None ):
         # TODO: Consider using "IsNeurotransmitter" as a class (in the DSL).
         expr = IsAttribute() + HasKey('Transmitters') + HasValue( modifiers[name] )
     elif name in neuron_types:
-        expr = IsAttribute() + HasKey('name') + HasValue( modifiers[name] )
+        expr = IsAttribute() + HasKey('uname') + HasValue( modifiers[name] )
     elif name in synapticities:
         expr = IsSynapticConnection()
         #print "syn_num", syn_num

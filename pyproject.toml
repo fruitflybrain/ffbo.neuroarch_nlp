@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuroarch_nlp"
+version = "0.5.1"
+description = "A package for translating English queries to NeuroArch Database queries"
+readme = "README.md"
+authors = [
+  { name = "Wesley A. S. Bruning", email = "wesley.bruning@columbia.edu" },
+  { name = "Nikul Ukani",          email = "nikul@ee.columbia.edu" },
+  { name = "Yiyin Zhou",           email = "yiyin.zhou@fordham.edu" }
+]
+maintainers = [
+  { name = "Yiyin Zhou", email = "yiyin.zhou@fordham.edu" }
+]
+keywords = [
+  "NLP",
+  "natural language processing",
+  "natural language interface to database"
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Topic :: Database",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+  "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
+  "Topic :: Text Processing :: Linguistic",
+  "Topic :: Text Processing"
+]
+dependencies = [
+  "python-Levenshtein",
+  "thefuzz",
+  "datadiff",
+  "spacy>=3",
+  "nltk",
+  "refo @ https://github.com/fruitflybrain/refo/tarball/master#egg=refo-0.14"
+]
+
+[project.urls]
+Homepage = "https://github.com/fruitflybrain/ffbo.neuroarch_nlp"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neuroarch_nlp*"]
+
+[tool.setuptools.package-data]
+neuroarch_nlp = ["neuron_types.json"]

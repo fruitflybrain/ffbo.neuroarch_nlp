@@ -50,4 +50,4 @@ where = ["."]
 include = ["neuroarch_nlp*"]
 
 [tool.setuptools.package-data]
-neuroarch_nlp = ["neuron_types.json"]
+neuroarch_nlp = ["**/neuron_types.json"]

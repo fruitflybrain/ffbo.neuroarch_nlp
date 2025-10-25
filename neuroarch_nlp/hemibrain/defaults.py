@@ -1049,7 +1049,7 @@ neuron_types.update({
     'olfactory receptor neuron':'/r(.*)ORN(.*)',
     'olfactory receptor neurons':'/r(.*)ORN(.*)',
      # 'pn':['PN','mPN'],
-    'pn': '/r(.*)(?<!(L|WED))PN(.*)/r',
+    'pn': '/r(.*)(?<!(L|WED))PN(.*)',
     'upn': "/r(D|V)(.*)_(m|v|ml|l|lv|ad|il|l2|il2|iv)PN(.*)",
     'uniglomerular pn': "/r(D|V)(.*)_(m|v|ml|l|lv|ad|il|l2|il2|iv)PN(.*)",
     'mpn': '/r((M|MZ)_(.*)PN|mPN)(.*)',
